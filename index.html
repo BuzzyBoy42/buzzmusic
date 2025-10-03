@@ -147,7 +147,8 @@
         <div class="nav-item active" data-view="home">🏠 Home</div>
         <div class="nav-item" data-view="featured">⭐ Featured</div>
         <div class="nav-item" data-view="library">🎵 Library <span class="badge" id="libCount">0</span></div>
-        <div class="nav-item" data-view="playlists">📚 Playlists <span class="badge" id="plCount">0</span></div>
+        $1
+        <div class="nav-item" data-view="diagnostics">🧪 Test Stream</div>
       </div>
       <div class="nav-group">
         <div class="nav-title">Theme</div>
@@ -255,7 +256,7 @@
 
     // Update these lines to match your audio server
     const STREAM_IP   = "97.119.213.15";                   // your IP or domain
-    const STREAM_BASE = `http://${STREAM_IP}:3001/stream/`;  // e.g., \"/audio/\" endpoint serving files
+    const STREAM_BASE = `http://${STREAM_IP}:3001/stream/`;  // switched to /stream/ endpoint  // e.g., \"/audio/\" endpoint serving files
     const musicDown   = false;
 
     /***************************
@@ -291,7 +292,7 @@
       {
         id:'t1', title:'Midnight Drive', artist:'Luxe City', album:'Neon Nights',
         cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
-        file:'CRUSH.mp3', duration: 224, genres:['synthwave','featured','chill']
+        file:'Luxe City - Midnight Drive.mp3', duration: 224, genres:['synthwave','featured','chill']
       },
       {
         id:'t2', title:'Sunset Lo-Fi', artist:'Koto Blue', album:'Sketchbook Vol.1',
@@ -491,7 +492,11 @@
       nowCover.src=t.cover; nowTitle.textContent=t.title + (t.explicit?' (E)':''); nowArtist.textContent=`${t.artist} • ${t.album}`; btnPlay.textContent='⏸';
     }
 
-    function resolveSrc(t){ return STREAM_BASE + encodeURIComponent(t.file); }
+    function resolveSrc(t){
+      // If the file looks like a full URL (http/https/blob), use it directly; otherwise prepend STREAM_BASE
+      if(/^https?:\/\//.test(t.file) || /^blob:/.test(t.file)) return t.file;
+      return STREAM_BASE + encodeURIComponent(t.file);
+    }
 
     function playTrackById(id, bumpToTop=false){
       const t = tracks.find(x=>x.id===id); if(!t) return;
@@ -568,7 +573,94 @@
     /***************************
      * UTIL
      ***************************/
-    function fmtTime(sec){ sec = Math.round(sec); const m=Math.floor(sec/60); const s=(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
+    $1
+
+    /***************************
+     * DIAGNOSTICS VIEW (Stream tester)
+     ***************************/
+    function renderDiagnostics(){
+      sections.innerHTML = '';
+      const sec = document.createElement('section');
+      sec.className = 'section';
+      sec.innerHTML = `
+        <h2>Stream Tester</h2>
+        <div class="card" style="padding:1rem">
+          <div style="display:grid; gap:.6rem; grid-template-columns:1fr; max-width:760px">
+            <label style="display:grid; gap:.35rem">
+              <span style="color:#c9c9c9">File name (served by STREAM_BASE)</span>
+              <input id="diagFile" type="text" value="${(tracks[0]&&tracks[0].file)||''}" style="padding:.6rem .8rem; background:#1e1e1e; color:#fff; border:1px solid var(--border); border-radius:8px"/>
+            </label>
+            <label style="display:grid; gap:.35rem">
+              <span style="color:#c9c9c9">Or full URL (overrides file name)</span>
+              <input id="diagUrl" type="text" placeholder="http://IP:3001/stream/YourTest.mp3" style="padding:.6rem .8rem; background:#1e1e1e; color:#fff; border:1px solid var(--border); border-radius:8px"/>
+            </label>
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap">
+              <button class="btn" id="btnRunDiag">Run Tests</button>
+              <button class="btn secondary" id="btnPlayDiag">Play Stream</button>
+              <a class="btn secondary" id="btnOpenNew" target="_blank">Open in New Tab</a>
+            </div>
+            <pre id="diagOut" style="background:#0f0f0f; border:1px solid var(--border); padding:10px; border-radius:8px; min-height:120px; white-space:pre-wrap"></pre>
+            <audio id="diagAudio" controls style="width:100%"></audio>
+          </div>
+        </div>`;
+      sections.appendChild(sec);
+
+      const out = document.getElementById('diagOut');
+      const fileEl = document.getElementById('diagFile');
+      const urlEl = document.getElementById('diagUrl');
+      const a = document.getElementById('diagAudio');
+      const openNew = document.getElementById('btnOpenNew');
+
+      function resolve(){
+        const direct = urlEl.value.trim();
+        const url = direct || (STREAM_BASE + encodeURIComponent(fileEl.value.trim()));
+        openNew.href = url; return url;
+      }
+      function log(msg){ out.textContent += `
+${msg}`; out.scrollTop = out.scrollHeight; }
+      function ok(msg){ log('✅ '+msg); }
+      function err(msg){ log('❌ '+msg); }
+
+      document.getElementById('btnPlayDiag').onclick = ()=>{ const u=resolve(); a.src=u; a.play().catch(e=>err('Audio play error: '+e.message)); };
+      openNew.href = resolve();
+
+      document.getElementById('btnRunDiag').onclick = async ()=>{
+        out.textContent = 'Running tests…';
+        const url = resolve();
+        try{
+          const t0 = performance.now();
+          const r = await fetch(url, { method:'GET', headers:{ 'Range':'bytes=0-1' }, cache:'no-store' });
+          const t1 = performance.now();
+          const ct = r.headers.get('Content-Type');
+          const ar = r.headers.get('Accept-Ranges');
+          const cr = r.headers.get('Content-Range');
+          log(`
+GET (Range 0-1) → status ${r.status}`);
+          log(`TTFB ~ ${(t1 - t0).toFixed(1)} ms`);
+          log(`Content-Type: ${ct || '(none)'}`);
+          log(`Accept-Ranges: ${ar || '(none)'}`);
+          log(`Content-Range: ${cr || '(none)'}`);
+          if(r.status===206){ ok('Partial content supported (byte-range). Seeking should work.'); }
+          else if(r.status===200){ log('ℹ️ Server returned 200. May still play, but byte-range seeking might be limited.'); }
+          else { err('Unexpected status code.'); }
+
+          const t2 = performance.now();
+          const r2 = await fetch(url, { method:'GET', headers:{ 'Range':'bytes=0-65535' }, cache:'no-store' });
+          const t3 = performance.now();
+          ok(`Fetched 64KB chunk in ${(t3 - t2).toFixed(1)} ms (status ${r2.status}).`);
+
+          a.src = url;
+          a.onloadedmetadata = ()=>{
+            const target = Math.min(10, (a.duration||60)/2);
+            a.currentTime = target; // trigger seek
+          };
+          a.onseeking = ()=>{ log('🔎 audio: seeking…'); };
+          a.onseeked  = ()=>{ ok('audio: seeked successfully'); };
+          a.onerror   = ()=>{ err('audio error: '+ (a.error?.message||a.error?.code||'unknown')); };
+
+        }catch(e){ err('Fetch failed — likely CORS, HTTPS upgrade, firewall, or wrong URL. '+e.message); }
+      };
+    }
 
     /***************************
      * INIT
@@ -598,7 +690,8 @@
           if(!Object.keys(state.playlists).length){ wrap.innerHTML='<div style="opacity:.8; padding:1rem">No playlists yet. Open a song and use <b>Add to Playlist</b>.</div>'; }
           sections.innerHTML=''; sections.appendChild(wrap);
         }
-        if(v==='home'){ renderSections(); }
+        if(v==='diagnostics'){ renderDiagnostics(); }
+        $1
       });
     });
 
