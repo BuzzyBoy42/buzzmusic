@@ -3,49 +3,30 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>BuzzMusic</title>
+  <title>BuzzMusic — Google Drive Stream</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{--bg:#141414;--card:#1b1b1b;--soft:#232323;--text:#fff;--brand:#1db954;--border:rgba(255,255,255,.08)}
-    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow-x:hidden}
-    #proxyBanner{position:fixed;top:0;left:0;width:100%;text-align:center;padding:.7rem;font-weight:700;z-index:10001;background:#12381c;color:#86efac;border-bottom:1px solid #166534}
-    body.has-banner{padding-top:2.8rem}
-    /* Splash */
-    #splash{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:10000;overflow:hidden;animation:splashFade 2.2s ease-out forwards}
-    .lines-container{position:absolute;inset:0;display:flex}
-    .lines-container .line{flex:1;height:0;background:#fff;animation:grow .6s ease-out forwards}
-    .lines-container .line:nth-child(n){animation-delay:calc((var(--i)*.03s))}
-    .splash-logo{position:relative;font-size:2.4rem;font-weight:800;color:#fff;opacity:0;animation:logoFade .45s ease-out 1.2s forwards;z-index:2}
-    @keyframes grow{to{height:100vh}}@keyframes logoFade{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}@keyframes splashFade{0%{opacity:1}75%{opacity:1}100%{opacity:0;visibility:hidden}}
-    .container{width:92%;max-width:1200px;margin:0 auto 140px;padding-top:1rem}
-    header{display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px}
+    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:980px;margin:32px auto 120px;padding:0 16px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .logo{font-weight:900;font-size:1.6rem;letter-spacing:.3px;color:var(--brand)}
-    .searchbar{display:flex;gap:.6rem;align-items:center;justify-content:center;margin:10px 0 18px}
-    .searchbar input{width:min(640px,92%);padding:.8rem 1rem;border-radius:999px;background:#1e1e1e;color:#fff;border:1px solid var(--border);outline:none}
-    .hero{position:relative;width:100%;height:40vh;max-height:480px;margin:10px auto 18px;overflow:hidden;border-radius:14px;background:#090909}
-    .hero-slide{position:absolute;inset:0;background-position:center;background-size:cover;opacity:0;transition:opacity 1s ease-in-out}
-    .hero-slide.active{opacity:1}
-    .hero-overlay{position:absolute;inset:auto 0 0 0;padding:2rem;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.75) 60%,rgba(0,0,0,.9) 100%)}
-    .hero-title{font-size:1.8rem;font-weight:800;margin-bottom:.4rem}
-    .hero-sub{color:#cfcfcf;margin-bottom:1rem}
-    .hero-buttons{display:flex;gap:.6rem;flex-wrap:wrap}
-    .btn{background:var(--brand);color:#000;border:none;padding:.6rem .95rem;border-radius:999px;font-weight:800;cursor:pointer}
+    .search{display:flex;justify-content:center;margin:12px 0 18px}
+    .search input{width:min(640px,92%);padding:.8rem 1rem;border-radius:999px;background:#1e1e1e;color:#fff;border:1px solid var(--border);outline:none}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#111}
+    .card-body{padding:.75rem 0.85rem 1rem}
+    .title{font-weight:800;margin-bottom:4px}
+    .sub{color:#cfcfcf;font-size:.92rem}
+    .btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .btn{background:var(--brand);color:#000;border:none;border-radius:999px;padding:.55rem .9rem;font-weight:800;cursor:pointer}
     .btn.secondary{background:#2b2b2b;color:#fff;border:1px solid var(--border)}
-    .hero-nav{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
-    .hero-nav span{pointer-events:auto;margin:0 .8rem;font-size:1.8rem;padding:.25rem .55rem;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid var(--border);cursor:pointer}
-    .section{margin:22px 0}.section h2{font-size:1.2rem;margin:0 0 10px 6px;font-weight:800}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .22s ease,background .22s ease}
-    .card:hover{transform:translateY(-3px);background:#202020}
-    .cover{width:100%;aspect-ratio:1/1;object-fit:cover;background:#111}
-    .card-body{padding:.7rem .75rem 1rem}
-    .card-title{font-weight:800;font-size:.95rem;margin-bottom:.25rem}
-    .card-sub{color:#cfcfcf;font-size:.85rem}
-    .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid var(--border);padding:.6rem .8rem;display:grid;grid-template-columns:320px 1fr 320px;gap:10px;align-items:center;z-index:10001}
+    .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid var(--border);padding:.6rem .8rem;display:grid;grid-template-columns:320px 1fr 320px;gap:10px;align-items:center;z-index:10}
     .now{display:flex;align-items:center;gap:.7rem;min-width:0}
     .now img{width:56px;height:56px;border-radius:6px;object-fit:cover}
-    .now .title{font-weight:800;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .now .artist{color:#d0d0d0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .now .t{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .now .a{color:#d0d0d0;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .controls{display:flex;flex-direction:column;align-items:center;gap:.45rem}
     .buttons{display:flex;align-items:center;gap:.5rem}
     .iconbtn{background:#1f1f1f;border:1px solid var(--border);color:#fff;width:34px;height:34px;border-radius:999px;display:grid;place-items:center;cursor:pointer}
@@ -57,181 +38,169 @@
     .right{display:flex;align-items:center;justify-content:flex-end;gap:.6rem}
     .pill{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#1a1a1a;font-size:.8rem}
     @media(max-width:900px){.player{grid-template-columns:1fr;gap:.6rem}.right{justify-content:center}}
+    .note{margin-top:20px;color:#cfcfcf;font-size:.9rem;line-height:1.5}
   </style>
 </head>
-<body class="has-banner">
-  <div id="proxyBanner">🛡️ Streaming via HTTPS proxy (buzzmusic.pages.dev) — inline playback enabled.</div>
-
-  <!-- Splash -->
-  <div id="splash">
-    <div class="lines-container"></div>
-    <div class="splash-logo">BuzzMusic</div>
-  </div>
-
-  <div class="container">
+<body>
+  <div class="wrap">
     <header>
       <div class="logo">BuzzMusic</div>
     </header>
 
-    <!-- Hero -->
-    <section class="hero" id="hero">
-      <div class="hero-nav"><span id="prevHero">❮</span><span id="nextHero">❯</span></div>
-    </section>
+    <div class="search"><input id="q" placeholder="Search songs…"></div>
 
-    <!-- Search -->
-    <div class="searchbar"><input id="searchInput" type="text" placeholder="Search songs, artists, albums…"/></div>
+    <div id="list" class="grid"></div>
 
-    <!-- Sections -->
-    <div id="sections"></div>
+    <p class="note">
+      Tip: Ensure your Google Drive file is shared as <b>Anyone with the link → Viewer</b>.  
+      This page streams directly from <code>drive.google.com</code> over HTTPS. If playback fails
+      (quota/scan page), use “Open Direct” to play in a new tab.
+    </p>
   </div>
 
   <!-- Player -->
-  <div class="player" id="player">
+  <div class="player">
     <div class="now">
-      <img id="nowCover" alt="cover" src=""/>
+      <img id="nowCover" alt="cover" src="https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=600&auto=format&fit=crop"/>
       <div style="min-width:0">
-        <div class="title" id="nowTitle">Nothing playing</div>
-        <div class="artist" id="nowArtist"></div>
+        <div class="t" id="nowTitle">Nothing playing</div>
+        <div class="a" id="nowArtist"></div>
       </div>
     </div>
     <div class="controls">
       <div class="buttons">
-        <button class="iconbtn" id="btnPrev" title="Previous">⏮</button>
-        <button class="iconbtn primary" id="btnPlay" title="Play/Pause">▶</button>
-        <button class="iconbtn" id="btnNext" title="Next">⏭</button>
+        <button class="iconbtn" id="prev">⏮</button>
+        <button class="iconbtn primary" id="play">▶</button>
+        <button class="iconbtn" id="next">⏭</button>
       </div>
       <div class="progress">
-        <span class="time" id="curTime">0:00</span>
+        <span class="time" id="tCur">0:00</span>
         <input type="range" id="seek" min="0" max="1000" value="0"/>
-        <span class="time" id="durTime">0:00</span>
+        <span class="time" id="tDur">0:00</span>
       </div>
     </div>
-    <div class="right"><span class="pill" id="queueCount">Queue: 0</span><input type="range" id="volume" min="0" max="1" step="0.01" value="0.9" style="width:140px"/></div>
-    <audio id="audio"></audio>
+    <div class="right">
+      <span class="pill" id="qCount">Queue: 0</span>
+      <input type="range" id="vol" min="0" max="1" step="0.01" value="0.9" style="width:140px"/>
+    </div>
+    <audio id="audio" preload="none"></audio>
   </div>
 
   <script>
-    /********* CONFIG: your proxy base (HTTPS) *********/
-    const PROXY_BASE = "https://1ab3344f.buzzmusic.pages.dev/proxy/"; // ✅ your Pages URL
+    // --- Google Drive helpers ---
+    const gdriveDirect = (id) => `https://drive.google.com/uc?export=download&id=${id}`;
 
-    /********* Sample tracks (replace with your real files) *********/
+    // Your shared file ID from the link you gave:
+    const FILE_ID_FROM_YOU = "138HzI1mM47HkSd0jh2_FOSqiX6lCLaCx";
+
+    // Demo tracks (first one uses your Google Drive file)
     const tracks = [
-      { id:'t1', title:'CRUSH', artist:'Luxe City', album:'Neon Nights',
-        cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
-        file:'CRUSH.mp3', duration:224, genres:['featured','chill','pop'] },
-      { id:'t2', title:'Sunset Lo-Fi', artist:'Koto Blue', album:'Sketchbook Vol.1',
-        cover:'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
-        file:'Koto Blue - Sunset Lo-Fi.mp3', duration:188, genres:['featured','lofi','chill'] },
-      { id:'t3', title:'Hold Tight', artist:'Glass Harbor', album:'Run Wild',
-        cover:'https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?q=80&w=1200&auto=format&fit=crop',
-        file:'Glass Harbor - Hold Tight.mp3', duration:201, genres:['pop'] }
+      {
+        id: 'gd1',
+        title: 'Your Google Drive Track',
+        artist: 'BuzzMusic',
+        album: 'Drive Demo',
+        cover: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
+        gdriveId: FILE_ID_FROM_YOU
+      },
+      {
+        id: 'gd2',
+        title: 'Another Drive Track (change the ID)',
+        artist: 'BuzzMusic',
+        album: 'Drive Demo',
+        cover: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
+        gdriveId: FILE_ID_FROM_YOU // duplicate for demo; replace with another file id if you have one
+      }
     ];
-    const sectionsConfig = [
-      { key:'featured', title:'Featured' },{ key:'chill', title:'Chill' },{ key:'lofi', title:'Lo-Fi & Study' },{ key:'pop', title:'Pop' }
-    ];
 
-    /********* Helpers *********/
-    const $ = s=>document.querySelector(s);
-    const audio = $('#audio');
-    const nowCover=$('#nowCover'), nowTitle=$('#nowTitle'), nowArtist=$('#nowArtist');
-    const btnPlay=$('#btnPlay'), btnPrev=$('#btnPrev'), btnNext=$('#btnNext');
-    const seek=$('#seek'), vol=$('#volume'); const curTime=$('#curTime'), durTime=$('#durTime');
-    const queueCount=$('#queueCount'); const state = { current:null, queue:[] };
+    const $ = s => document.querySelector(s);
+    const list = $('#list'); const q = $('#q');
+    const audio = $('#audio'); const nowCover=$('#nowCover'); const nowTitle=$('#nowTitle'); const nowArtist=$('#nowArtist');
+    const btnPlay=$('#play'), btnPrev=$('#prev'), btnNext=$('#next');
+    const seek=$('#seek'), vol=$('#vol'); const tCur=$('#tCur'), tDur=$('#tDur'); const qCount=$('#qCount');
 
-    document.addEventListener('DOMContentLoaded', ()=>{
-      initSplash(); buildHero(); renderSections(); wirePlayer(); wireSearch();
-      document.body.classList.add('has-banner');
-    });
+    const state = { queue: [], current: null };
 
-    function initSplash(){
-      const colors=["#1db954","#22c55e","#10b981","#34d399","#86efac","#a7f3d0","#6ee7b7","#059669","#16a34a","#065f46","#2dd4bf","#14b8a6"];
-      const lc=document.querySelector('.lines-container');
-      for(let i=0;i<36;i++){ const d=document.createElement('div'); d.className='line'; d.style.setProperty('--i',i); d.style.background=colors[Math.floor(Math.random()*colors.length)]; lc.appendChild(d); }
-      document.getElementById('splash').addEventListener('animationend', e=>{ if(e.animationName==='splashFade'){ document.getElementById('splash').remove(); }});
-    }
+    function fmtTime(sec){ sec=Math.round(sec||0); const m=Math.floor(sec/60); const s=(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
 
-    /********* Build hero *********/
-    function buildHero(){
-      const hero=$('#hero'); const featured=tracks.filter(t=>t.genres?.includes('featured'));
-      hero.querySelectorAll('.hero-slide').forEach(n=>n.remove());
-      featured.forEach((t,i)=>{
-        const d=document.createElement('div'); d.className='hero-slide'+(i===0?' active':''); d.style.backgroundImage=`url(${t.cover})`;
-        const overlay=document.createElement('div'); overlay.className='hero-overlay';
-        overlay.innerHTML=`<div class="hero-title">${t.title}</div><div class="hero-sub">${t.artist} • ${t.album}</div>
-          <div class="hero-buttons"><button class="btn" data-id="${t.id}">▶ Play</button><button class="btn secondary" data-open="${t.id}">🔗 Open</button></div>`;
-        d.appendChild(overlay); hero.appendChild(d);
-      });
-      let idx=0, timer; function show(i){ hero.querySelectorAll('.hero-slide').forEach((s,k)=>s.classList.toggle('active', k===i)); }
-      function start(){ clearInterval(timer); timer=setInterval(()=>{ idx=(idx+1)%featured.length; show(idx); }, 6000); }
-      $('#prevHero').onclick=()=>{ idx=(idx-1+featured.length)%featured.length; show(idx); start(); };
-      $('#nextHero').onclick=()=>{ idx=(idx+1)%featured.length; show(idx); start(); };
-      hero.addEventListener('click', e=>{
-        const id=e.target.closest('button')?.dataset?.id;
-        const openId=e.target.closest('button')?.dataset?.open;
-        if(id) playTrack(id);
-        if(openId) openInNewTab(openId);
-      });
-      show(0); start();
-    }
-
-    /********* Sections *********/
-    function createCard(t){
-      const c=document.createElement('div'); c.className='card';
-      c.innerHTML=`<img class="cover" src="${t.cover}" alt="${t.title} cover"/>
-        <div class="card-body"><div class="card-title">${t.title}</div><div class="card-sub">${t.artist} • ${t.album}</div></div>`;
-      c.addEventListener('click', ()=> playTrack(t.id));
-      return c;
-    }
-    function renderSections(filter=''){
-      const wrap=$('#sections'); wrap.innerHTML='';
-      sectionsConfig.forEach(sec=>{
-        const data=tracks.filter(t=>(t.genres||[]).includes(sec.key));
-        const filtered=filter? data.filter(t=>`${t.title} ${t.artist} ${t.album}`.toLowerCase().includes(filter)) : data;
-        if(!filtered.length) return;
-        const s=document.createElement('section'); s.className='section'; s.innerHTML=`<h2>${sec.title}</h2>`;
-        const grid=document.createElement('div'); grid.className='grid';
-        filtered.forEach(t=>grid.appendChild(createCard(t)));
-        s.appendChild(grid); wrap.appendChild(s);
-      });
-    }
-    function wireSearch(){ $('#searchInput').addEventListener('input', e=>{ renderSections(e.target.value.trim().toLowerCase()); }); }
-
-    /********* Player *********/
     function srcFor(t){
-      const base = PROXY_BASE.endsWith('/') ? PROXY_BASE : (PROXY_BASE + '/');
-      return base + encodeURIComponent(t.file);
-    }
-    function playTrack(id){
-      const t=tracks.find(x=>x.id===id); if(!t) return;
-      if(!state.queue.includes(id)) state.queue.push(id);
-      state.current={ id }; queueCount.textContent=`Queue: ${state.queue.length}`;
-      nowCover.src=t.cover; nowTitle.textContent=t.title; nowArtist.textContent=`${t.artist} • ${t.album}`;
-      audio.src = srcFor(t);
-      audio.play().then(()=>{ btnPlay.textContent='⏸'; }).catch((e)=>{ alert('Playback failed. Check the proxy URL and file name.'); console.error(e); });
-    }
-    function nextInQueue(){ if(!state.queue.length){ audio.pause(); btnPlay.textContent='▶'; return; } const i=state.queue.indexOf(state.current?.id); const next=(i>=0 && i<state.queue.length-1)? state.queue[i+1] : state.queue[0]; if(next) playTrack(next); }
-    function prevInQueue(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current?.id); const prev=(i>0)? state.queue[i-1] : state.queue[state.length-1]; if(prev) playTrack(prev); }
-    function fmt(s){ s=Math.round(s); const m=Math.floor(s/60); const r=(s%60).toString().padStart(2,'0'); return `${m}:${r}`; }
-
-    function wirePlayer(){
-      vol.addEventListener('input', ()=> audio.volume=+vol.value);
-      btnPlay.onclick=()=>{ if(audio.paused){ audio.play().catch(()=>{}); btnPlay.textContent='⏸'; } else { audio.pause(); btnPlay.textContent='▶'; } };
-      btnPrev.onclick=()=> prevInQueue();
-      btnNext.onclick=()=> nextInQueue();
-      $('#seek').addEventListener('input', ()=>{ if(audio.duration){ const p=seek.value/1000; audio.currentTime=p*audio.duration; }});
-      audio.addEventListener('timeupdate', ()=>{ const d=audio.duration||0,c=audio.currentTime||0; curTime.textContent=fmt(c); durTime.textContent=fmt(d); if(d){ seek.value=Math.floor((c/d)*1000); }});
-      audio.addEventListener('ended', ()=> nextInQueue());
-      window.addEventListener('keydown', e=>{ if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return; if(e.code==='Space'){ e.preventDefault(); btnPlay.click(); } });
+      if (t.gdriveId) return gdriveDirect(t.gdriveId);
+      return t.src || '';
     }
 
-    /********* Fallback open in new tab *********/
-    function urlForId(id){ const t=tracks.find(x=>x.id===id); return t? srcFor(t): null; }
-    function openInNewTab(id){ const u=urlForId(id); if(u) window.open(u,'_blank','noopener,noreferrer'); }
+    function render(filter=''){
+      list.innerHTML='';
+      tracks
+        .filter(t => !filter || (`${t.title} ${t.artist} ${t.album}`).toLowerCase().includes(filter))
+        .forEach(t => {
+          const card = document.createElement('div'); card.className='card';
+          card.innerHTML = `
+            <img src="${t.cover}" alt="${t.title} cover"/>
+            <div class="card-body">
+              <div class="title">${t.title}</div>
+              <div class="sub">${t.artist} • ${t.album}</div>
+              <div class="btns">
+                <button class="btn" data-id="${t.id}">▶ Play</button>
+                <button class="btn secondary" data-open="${t.id}">🔗 Open Direct</button>
+              </div>
+            </div>`;
+          card.querySelector('[data-id]').onclick = () => playById(t.id);
+          card.querySelector('[data-open]').onclick = () => openDirect(t.id);
+          list.appendChild(card);
+        });
+    }
+
+    function playById(id){
+      const t = tracks.find(x => x.id === id); if(!t) return;
+      const url = srcFor(t);
+      // update UI
+      nowCover.src = t.cover; nowTitle.textContent = t.title; nowArtist.textContent = `${t.artist} • ${t.album}`;
+      if (!state.queue.includes(id)) state.queue.push(id);
+      state.current = id; qCount.textContent = `Queue: ${state.queue.length}`;
+
+      audio.src = url;
+      audio.play().then(() => {
+        btnPlay.textContent = '⏸';
+      }).catch(err => {
+        // If Drive serves an interstitial (quota/scan), inline playback can fail. Offer direct open.
+        console.warn('Inline play failed:', err);
+        if (confirm('Inline playback failed. Open the file in a new tab?')) {
+          openDirect(id);
+        }
+      });
+    }
+
+    function openDirect(id){
+      const t = tracks.find(x => x.id === id); if(!t) return;
+      window.open(srcFor(t), '_blank', 'noopener,noreferrer');
+    }
+
+    // transport controls
+    btnPlay.onclick = () => { if(audio.paused){ audio.play().catch(()=>{}); btnPlay.textContent='⏸'; } else { audio.pause(); btnPlay.textContent='▶'; } };
+    btnPrev.onclick = () => step(-1);
+    btnNext.onclick = () => step(1);
+    function step(dir){
+      if(!state.queue.length) return;
+      const i = state.queue.indexOf(state.current);
+      const n = (i + dir + state.queue.length) % state.queue.length;
+      playById(state.queue[n]);
+    }
+
+    // progress & volume
+    vol.addEventListener('input', () => audio.volume = +vol.value);
+    seek.addEventListener('input', () => { if(audio.duration){ const p=seek.value/1000; audio.currentTime=p*audio.duration; }});
+    audio.addEventListener('timeupdate', () => {
+      const d=audio.duration||0, c=audio.currentTime||0;
+      tCur.textContent = fmtTime(c); tDur.textContent = fmtTime(d);
+      if(d) seek.value = Math.floor((c/d)*1000);
+    });
+    audio.addEventListener('ended', () => step(1));
+
+    // search
+    q.addEventListener('input', e => render(e.target.value.trim().toLowerCase()));
+
+    // init
+    render();
   </script>
-
-  <br>
-  <p style="text-align:center;color:#c9c9c9;font-size:.9rem;max-width:900px;margin:0 auto 60px;line-height:1.5">
-    ✅ Streams inline over HTTPS via <code>https://1ab3344f.buzzmusic.pages.dev/proxy/</code>. Replace sample filenames with your real tracks.
-  </p>
 </body>
 </html>
