@@ -36,154 +36,126 @@
     .pill{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#1a1a1a}
     .diag{background:#171717;border:1px solid var(--border);border-radius:12px;padding:12px}
     .row{display:grid;grid-template-columns:40px 1fr 120px 70px;gap:.5rem;padding:.55rem .7rem;border-bottom:1px dashed var(--border);align-items:center}
-    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10;align-items:center;justify-content:center;padding:1rem}
-    .modal>div{background:#181818;border:1px solid var(--border);border-radius:12px;width:min(900px,94%);overflow:hidden}
-    .mh{display:flex;gap:1rem;padding:1rem;border-bottom:1px solid var(--border)} .mh img{width:120px;height:120px;border-radius:10px;object-fit:cover}
     .notice{position:fixed;top:10px;right:10px;background:#222;border:1px solid var(--border);padding:.6rem .8rem;border-radius:8px;display:none}
     .notice.show{display:block}
     @media(max-width:900px){.app{grid-template-columns:1fr}.player{grid-template-columns:1fr}.now{justify-content:center}}
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside>
-      <div class="brand">BuzzMusic</div>
-      <div class="nav" style="margin-top:.6rem">
-        <div class="nav-item active" data-view="home">🏠 Home</div>
-        <div class="nav-item" data-view="playlists">📚 Playlists</div>
-        <div class="nav-item" data-view="diagnostics">🧪 Test Stream</div>
-      </div>
-      <div class="nav" style="margin-top:1rem">
-        <label class="nav-item" for="localFiles">➕ Add Local Files
-          <input id="localFiles" type="file" accept="audio/*" multiple style="display:none">
-        </label>
-      </div>
-    </aside>
+<div class="app">
+  <aside>
+    <div class="brand">BuzzMusic</div>
+    <div class="nav" style="margin-top:.6rem">
+      <div class="nav-item active" data-view="home">🏠 Home</div>
+      <div class="nav-item" data-view="diagnostics">🧪 Test Stream</div>
+    </div>
+    <div class="nav" style="margin-top:1rem">
+      <label class="nav-item" for="localFiles">➕ Add Local Files
+        <input id="localFiles" type="file" accept="audio/*" multiple style="display:none">
+      </label>
+    </div>
+  </aside>
 
-    <main>
-      <header><div class="brand">Browse</div></header>
-      <div class="container">
-        <section class="section">
-          <input id="q" placeholder="Search songs, artists, albums…" style="width:100%;max-width:600px;padding:.75rem 1rem;border-radius:999px;background:#1f1f1f;border:1px solid var(--border);color:#fff;outline:none">
-        </section>
-        <section class="section" id="secFeatured"><h2>Featured</h2><div class="grid" id="gridFeatured"></div></section>
-        <section class="section" id="secAll"><h2>All</h2><div class="grid" id="gridAll"></div></section>
-        <section class="section" id="secDiag" style="display:none">
-          <h2>Stream Tester</h2>
-          <div class="diag">
-            <div style="display:grid;gap:8px;max-width:760px">
-              <input id="diagFile" placeholder="File under /stream/ (e.g., CRUSH.mp3)" style="padding:.6rem .8rem;background:#1f1f1f;border:1px solid var(--border);border-radius:8px;color:#fff">
-              <input id="diagUrl" placeholder="Or full URL (overrides file)" style="padding:.6rem .8rem;background:#1f1f1f;border:1px solid var(--border);border-radius:8px;color:#fff">
-              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-                <button id="btnRunDiag" class="pill">Run Tests</button>
-                <button id="btnPlayDiag" class="pill">Play Stream</button>
-                <a id="btnOpenNew" class="pill" target="_blank">Open in New Tab</a>
-              </div>
-              <pre id="diagOut" style="background:#0f0f0f;border:1px solid var(--border);padding:8px;border-radius:8px;white-space:pre-wrap;min-height:110px"></pre>
-              <audio id="diagAudio" controls style="width:100%"></audio>
+  <main>
+    <header><div class="brand">Browse</div></header>
+    <div class="container">
+      <section class="section">
+        <input id="q" placeholder="Search songs, artists, albums…" style="width:100%;max-width:600px;padding:.75rem 1rem;border-radius:999px;background:#1f1f1f;border:1px solid var(--border);color:#fff;outline:none">
+      </section>
+
+      <section class="section"><h2>Featured</h2><div class="grid" id="gridFeatured"></div></section>
+      <section class="section"><h2>All</h2><div class="grid" id="gridAll"></div></section>
+
+      <section class="section" id="secDiag" style="display:none">
+        <h2>Stream Tester</h2>
+        <div class="diag">
+          <div style="display:grid;gap:8px;max-width:760px">
+            <input id="diagFile" placeholder="File under /audio/ (e.g., CRUSH.mp3)" style="padding:.6rem .8rem;background:#1f1f1f;border:1px solid var(--border);border-radius:8px;color:#fff">
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button id="btnRunDiag" class="pill">Run Tests</button>
+              <button id="btnPlayDiag" class="pill">Play Stream</button>
+              <a id="btnOpenNew" class="pill" target="_blank">Open in New Tab</a>
             </div>
+            <pre id="diagOut" style="background:#0f0f0f;border:1px solid var(--border);padding:8px;border-radius:8px;white-space:pre-wrap;min-height:110px"></pre>
+            <audio id="diagAudio" controls style="width:100%"></audio>
           </div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <!-- Modal -->
-  <div class="modal" id="modal"><div>
-    <div class="mh">
-      <img id="mCover" alt="cover">
-      <div style="flex:1">
-        <h2 id="mTitle" style="margin:.2rem 0 .4rem"></h2>
-        <div id="mSub" style="color:#c9c9c9"></div>
-        <div style="margin-top:.6rem;display:flex;gap:.5rem">
-          <button class="pill" id="mPlay">Play</button>
-          <button class="pill" id="mQueue">Add to Queue</button>
         </div>
-      </div>
+      </section>
     </div>
-    <div id="mTracks"></div>
-  </div></div>
+  </main>
+</div>
 
-  <!-- Player -->
-  <div class="player">
-    <div class="now">
-      <img id="nowCover" src="" alt="cover">
-      <div>
-        <div id="nowTitle" class="title">Nothing playing</div>
-        <div id="nowArtist" class="sub"></div>
-      </div>
+<!-- Player -->
+<div class="player">
+  <div class="now">
+    <img id="nowCover" src="" alt="cover">
+    <div>
+      <div id="nowTitle" class="title">Nothing playing</div>
+      <div id="nowArtist" class="sub"></div>
     </div>
-    <div class="controls">
-      <div class="buttons">
-        <button id="bPrev" class="btn">⏮</button>
-        <button id="bPlay" class="btn primary">▶</button>
-        <button id="bNext" class="btn">⏭</button>
-      </div>
-      <div class="progress">
-        <span id="tCur" style="width:36px;text-align:center;font-size:.8rem">0:00</span>
-        <input id="seek" type="range" min="0" max="1000" value="0">
-        <span id="tDur" style="width:36px;text-align:center;font-size:.8rem">0:00</span>
-      </div>
-    </div>
-    <div style="display:flex;gap:.6rem;justify-content:flex-end">
-      <span class="pill" id="queueCount">Queue: 0</span>
-      <input id="vol" type="range" min="0" max="1" step="0.01" value="0.9" style="width:140px">
-    </div>
-    <audio id="audio"></audio>
   </div>
+  <div class="controls">
+    <div class="buttons">
+      <button id="bPrev" class="btn">⏮</button>
+      <button id="bPlay" class="btn primary">▶</button>
+      <button id="bNext" class="btn">⏭</button>
+    </div>
+    <div class="progress">
+      <span id="tCur" style="width:36px;text-align:center;font-size:.8rem">0:00</span>
+      <input id="seek" type="range" min="0" max="1000" value="0">
+      <span id="tDur" style="width:36px;text-align:center;font-size:.8rem">0:00</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:.6rem;justify-content:flex-end">
+    <span class="pill" id="queueCount">Queue: 0</span>
+    <input id="vol" type="range" min="0" max="1" step="0.01" value="0.9" style="width:140px">
+  </div>
+  <audio id="audio"></audio>
+</div>
 
-  <div id="notice" class="notice"></div>
+<div id="notice" class="notice"></div>
 
 <script>
 (() => {
-  // ===== CONFIG (same-origin HTTPS) =====
-  const STREAM_BASE = "/stream/"; // server-https.js serves this over HTTPS
+  // Compute base path that works for project pages (https://user.github.io/repo/) and root pages.
+  const BASE = new URL('.', location.href).pathname; // ends with '/'
+  const STREAM_BASE = new URL('audio/', location.href).href; // absolute HTTPS to /audio/
+
+  // Your files must exist at: <repo>/audio/<name>.mp3
   const tracks = [
-    {id:'t1', title:'CRUSH', artist:'Luxe City', album:'Neon Nights', cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop', file:'CRUSH.mp3', duration:224},
-    {id:'t2', title:'Sunset Lo-Fi', artist:'Koto Blue', album:'Sketchbook Vol.1', cover:'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop', file:'Koto Blue - Sunset Lo-Fi.mp3', duration:188},
-    {id:'tone', title:'Test Tone 1kHz', artist:'BuzzMusic', album:'Diagnostics', cover:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop', file:'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAABJYWFhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAA', duration:1}
+    {id:'t1', title:'CRUSH', artist:'Luxe City', album:'Neon Nights',
+     cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
+     file:'CRUSH.mp3', duration:224},
+    {id:'t2', title:'Sunset Lo-Fi', artist:'Koto Blue', album:'Sketchbook Vol.1',
+     cover:'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
+     file:'Koto Blue - Sunset Lo-Fi.mp3', duration:188}
   ];
 
-  // ===== Helpers =====
+  // ---- helpers ----
   const $ = s => document.querySelector(s);
   const fmt = s => { s=Math.round(s||0); const m=Math.floor(s/60); const x=(s%60).toString().padStart(2,'0'); return `${m}:${x}`; };
-  const notice = msg => { const n=$("#notice"); n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'), 4000); };
+  const urlFor = f => STREAM_BASE + encodeURIComponent(f);
 
-  // ===== Render =====
+  // ---- render ----
   function card(t){
     const d=document.createElement('div'); d.className='card';
-    d.innerHTML=`<img class="cover" src="${t.cover}"><div class="card-body"><div class="title">${t.title}</div><div class="sub">${t.artist} • ${t.album}</div></div>`;
-    d.onclick=()=>openModal(t);
+    d.innerHTML = \`<img class="cover" src="\${t.cover}" alt=""><div class="card-body"><div class="title">\${t.title}</div><div class="sub">\${t.artist} • \${t.album}</div></div>\`;
+    d.onclick = ()=> playById(t.id, true);
     return d;
   }
-  function renderAll(filter=""){
-    const f = x => (`${x.title} ${x.artist} ${x.album}`).toLowerCase().includes(filter);
+  function render(filter=''){
+    const f=x => (\`\${x.title} \${x.artist} \${x.album}\`).toLowerCase().includes(filter);
     const fea = tracks.slice(0,3).filter(f);
     const all = tracks.filter(f);
     const gF=$("#gridFeatured"); gF.innerHTML=""; fea.forEach(t=>gF.appendChild(card(t)));
     const gA=$("#gridAll"); gA.innerHTML=""; all.forEach(t=>gA.appendChild(card(t)));
   }
 
-  // ===== Modal =====
-  const modal=$("#modal"), mCover=$("#mCover"), mTitle=$("#mTitle"), mSub=$("#mSub"), mTracks=$("#mTracks");
-  let modalTrack=null;
-  function openModal(t){
-    modalTrack=t; mCover.src=t.cover; mTitle.textContent=t.title; mSub.textContent=`${t.artist} • ${t.album}`;
-    mTracks.innerHTML=""; tracks.filter(x=>x.album===t.album).forEach((m,i)=>{
-      const r=document.createElement('div'); r.className='row';
-      r.innerHTML=`<div>${i+1}</div><div>${m.title}${m.id===t.id?' • <span style="color:#1db954">selected</span>':''}</div><div class="sub">${m.artist}</div><div style="text-align:right">${fmt(m.duration)}</div>`;
-      r.ondblclick=()=>playById(m.id,true); mTracks.appendChild(r);
-    });
-    modal.style.display='flex';
-  }
-  modal.onclick=e=>{ if(e.target===modal) modal.style.display='none'; };
-  $("#mPlay").onclick=()=>{ if(modalTrack) playById(modalTrack.id,true); };
-  $("#mQueue").onclick=()=>{ if(modalTrack) addToQueue(modalTrack.id); };
-
-  // ===== Player =====
+  // ---- player ----
   const audio=$("#audio"); const nowCover=$("#nowCover"), nowTitle=$("#nowTitle"), nowArtist=$("#nowArtist");
-  const bPlay=$("#bPlay"), bPrev=$("#bPrev"), bNext=$("#bNext"); const seek=$("#seek"), tCur=$("#tCur"), tDur=$("#tDur"); const vol=$("#vol"), qCount=$("#queueCount");
+  const bPlay=$("#bPlay"), bPrev=$("#bPrev"), bNext=$("#bNext"), seek=$("#seek"), tCur=$("#tCur"), tDur=$("#tDur"), vol=$("#vol"), qCount=$("#queueCount");
   const state = { queue:[], current:null };
+
   vol.oninput=()=> audio.volume=+vol.value;
   bPlay.onclick=()=>{ if(audio.paused){ audio.play().catch(()=>{}); bPlay.textContent='⏸'; } else { audio.pause(); bPlay.textContent='▶'; } };
   bPrev.onclick=()=> prev(); bNext.onclick=()=> next();
@@ -191,65 +163,56 @@
   audio.ontimeupdate=()=>{ const d=audio.duration||0,c=audio.currentTime||0; tCur.textContent=fmt(c); tDur.textContent=fmt(d); if(d) seek.value=Math.floor(1000*c/d); };
   audio.onended=()=> next();
 
-  function resolveSrc(t){
-    if(/^https?:\/\//.test(t.file) || /^data:/.test(t.file) || /^blob:/.test(t.file)) return t.file;
-    return STREAM_BASE + encodeURIComponent(t.file);
-  }
-  function setNow(t){ nowCover.src=t.cover; nowTitle.textContent=t.title; nowArtist.textContent=`${t.artist} • ${t.album}`; bPlay.textContent='⏸'; }
-  function addToQueue(id){ if(!state.queue.includes(id)) state.queue.push(id); qCount.textContent=`Queue: ${state.queue.length}`; }
+  function setNow(t){ nowCover.src=t.cover; nowTitle.textContent=t.title; nowArtist.textContent=\`\${t.artist} • \${t.album}\`; bPlay.textContent='⏸'; }
+  function addToQueue(id){ if(!state.queue.includes(id)) state.queue.push(id); qCount.textContent=\`Queue: \${state.queue.length}\`; }
   function playById(id, bump=false){
     const t=tracks.find(x=>x.id===id); if(!t) return;
     addToQueue(id);
     if(bump){ const i=state.queue.indexOf(id); if(i>-1){ state.queue.splice(i,1); state.queue.unshift(id); } }
-    state.current=id; audio.src=resolveSrc(t); audio.play().catch(()=>{}); setNow(t);
+    state.current=id; audio.src=urlFor(t.file); audio.play().catch(()=>{}); setNow(t);
   }
-  function next(){
-    if(!state.queue.length) return;
-    const i=state.queue.indexOf(state.current); const n=i<state.queue.length-1? i+1 : 0;
-    playById(state.queue[n], true);
-  }
-  function prev(){
-    if(!state.queue.length) return;
-    const i=state.queue.indexOf(state.current); const p=i>0? i-1 : state.queue.length-1;
-    playById(state.queue[p], true);
-  }
+  function next(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current); const n=i<state.queue.length-1? i+1 : 0; playById(state.queue[n], true); }
+  function prev(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current); const p=i>0? i-1 : state.queue.length-1; playById(state.queue[p], true); }
 
-  // ===== Search + Nav =====
-  $("#q").oninput=e=>renderAll(e.target.value.trim().toLowerCase());
+  // ---- search & nav ----
+  $("#q").oninput=e=>render(e.target.value.trim().toLowerCase());
   document.querySelectorAll(".nav-item[data-view]").forEach(i=>i.onclick=()=>{
     document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active")); i.classList.add("active");
-    const v=i.dataset.view;
-    $("#secDiag").style.display = v==='diagnostics' ? '' : 'none';
+    const v=i.dataset.view; $("#secDiag").style.display = v==='diagnostics' ? '' : 'none';
   });
 
-  // ===== Tester =====
-  const diagFile=$("#diagFile"), diagUrl=$("#diagUrl"), diagOut=$("#diagOut"), diagAudio=$("#diagAudio"), btnOpen=$("#btnOpenNew");
-  function Dlog(m){ diagOut.textContent += `\n${m}`; diagOut.scrollTop=diagOut.scrollHeight; }
+  // ---- tester ----
+  const diagFile=$("#diagFile"), diagOut=$("#diagOut"), diagAudio=$("#diagAudio"), btnOpen=$("#btnOpenNew");
+  function Dlog(m){ diagOut.textContent += "\\n"+m; diagOut.scrollTop=diagOut.scrollHeight; }
   function Dok(m){ Dlog('✅ '+m); } function Derr(m){ Dlog('❌ '+m); }
-  function resolveDiag(){ const direct=diagUrl.value.trim(); const url= direct || (STREAM_BASE + encodeURIComponent(diagFile.value.trim())); btnOpen.href=url; return url; }
+  function resolveDiag(){ const file=(diagFile.value||'').trim(); const url=urlFor(file); btnOpen.href=url; return url; }
   $("#btnPlayDiag").onclick=()=>{ const u=resolveDiag(); diagAudio.src=u; diagAudio.play().catch(e=>Derr('Audio play error: '+e.message)); };
   btnOpen.href=resolveDiag();
   $("#btnRunDiag").onclick=async()=>{
     diagOut.textContent='Running tests…'; const url=resolveDiag();
-    if(location.protocol==='https:' && url.startsWith('http:')){ Derr('Mixed content: HTTPS page but HTTP stream. Use HTTPS stream.'); return; }
     try{
-      try{ const h=await fetch(url,{method:'HEAD',cache:'no-store'}); Dlog(`HEAD → ${h.status}`);}catch{ Dlog('HEAD failed (not fatal)'); }
-      const r=await fetch(url,{method:'GET',headers:{Range:'bytes=0-1'},cache:'no-store'}); Dlog(`GET Range 0-1 → ${r.status}`); Dlog('Accept-Ranges: '+(r.headers.get('Accept-Ranges')||'(none)')); Dlog('Content-Range: '+(r.headers.get('Content-Range')||'(none)')); Dlog('Content-Type: '+(r.headers.get('Content-Type')||'(none)'));
+      try{ const h=await fetch(url,{method:'HEAD',cache:'no-store'}); Dlog(\`HEAD → \${h.status}\`);}catch{ Dlog('HEAD failed (not fatal)'); }
+      const r=await fetch(url,{method:'GET',headers:{Range:'bytes=0-1'},cache:'no-store'});
+      Dlog(\`GET Range 0-1 → \${r.status}\`);
+      Dlog('Accept-Ranges: '+(r.headers.get('Accept-Ranges')||'(none)'));
+      Dlog('Content-Range: '+(r.headers.get('Content-Range')||'(none)'));
+      Dlog('Content-Type: '+(r.headers.get('Content-Type')||'(none)'));
       if(r.status===206) Dok('Byte-range OK (seeking will work).'); else if(r.status===200) Dlog('200 OK (seek may be limited).'); else Derr('Unexpected status.');
-    }catch(e){ Derr('Fetch failed (CORS, firewall, wrong URL?). '+e.message); }
+    }catch(e){ Derr('Fetch failed (check path/filename). '+e.message); }
   };
 
-  // ===== Local import =====
-  $("#localFiles").onchange=e=>{
+  // ---- local import (client-side only) ----
+  document.getElementById('localFiles').onchange=e=>{
     [...e.target.files].forEach((f,i)=>{
       const id='local_'+Date.now()+'_'+i;
-      tracks.push({id,title:f.name.replace(/\.[^/.]+$/,''),artist:'Local',album:'Local Files',cover:'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1200&auto=format&fit=crop',file:URL.createObjectURL(f),duration:0});
+      tracks.push({id,title:f.name.replace(/\\.[^/.]+$/,''),artist:'Local',album:'Local Files',
+        cover:'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1200&auto=format&fit=crop',
+        file:URL.createObjectURL(f),duration:0});
     });
-    renderAll();
+    render();
   };
 
-  // ===== Boot =====
-  renderAll();
+  render();
 })();
 </script>
 </body>
