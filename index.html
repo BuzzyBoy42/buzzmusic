@@ -1,45 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>BuzzMusic — Google Drive Stream</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    :root{--bg:#141414;--card:#1b1b1b;--soft:#232323;--text:#fff;--brand:#1db954;--border:rgba(255,255,255,.08)}
-    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{max-width:980px;margin:32px auto 120px;padding:0 16px}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .logo{font-weight:900;font-size:1.6rem;letter-spacing:.3px;color:var(--brand)}
-    .search{display:flex;justify-content:center;margin:12px 0 18px}
-    .search input{width:min(640px,92%);padding:.8rem 1rem;border-radius:999px;background:#1e1e1e;color:#fff;border:1px solid var(--border);outline:none}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-    .card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#111}
-    .card-body{padding:.75rem 0.85rem 1rem}
-    .title{font-weight:800;margin-bottom:4px}
-    .sub{color:#cfcfcf;font-size:.92rem}
-    .btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-    .btn{background:var(--brand);color:#000;border:none;border-radius:999px;padding:.55rem .9rem;font-weight:800;cursor:pointer}
-    .btn.secondary{background:#2b2b2b;color:#fff;border:1px solid var(--border)}
-    .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid var(--border);padding:.6rem .8rem;display:grid;grid-template-columns:320px 1fr 320px;gap:10px;align-items:center;z-index:10}
-    .now{display:flex;align-items:center;gap:.7rem;min-width:0}
-    .now img{width:56px;height:56px;border-radius:6px;object-fit:cover}
-    .now .t{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .now .a{color:#d0d0d0;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .controls{display:flex;flex-direction:column;align-items:center;gap:.45rem}
-    .buttons{display:flex;align-items:center;gap:.5rem}
-    .iconbtn{background:#1f1f1f;border:1px solid var(--border);color:#fff;width:34px;height:34px;border-radius:999px;display:grid;place-items:center;cursor:pointer}
-    .iconbtn.primary{background:var(--brand);color:#000;font-weight:900;width:40px;height:40px}
-    .progress{width:min(680px,92vw);display:flex;align-items:center;gap:8px}
-    .time{font-size:.75rem;color:#c6c6c6;width:36px;text-align:center}
-    input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;background:#2a2a2a;outline:none}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--brand);border:none}
-    .right{display:flex;align-items:center;justify-content:flex-end;gap:.6rem}
-    .pill{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#1a1a1a;font-size:.8rem}
-    @media(max-width:900px){.player{grid-template-columns:1fr;gap:.6rem}.right{justify-content:center}}
-    .note{margin-top:20px;color:#cfcfcf;font-size:.9rem;line-height:1.5}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BuzzMusic — Paste Your Own HTTPS MP3 Links</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#141414;--card:#1b1b1b;--soft:#232323;--text:#fff;--brand:#1db954;--border:rgba(255,255,255,.08)}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:32px auto 140px;padding:0 16px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .logo{font-weight:900;font-size:1.6rem;letter-spacing:.3px;color:var(--brand)}
+  .add{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin:12px 0 18px}
+  .add input{padding:.8rem 1rem;border-radius:10px;background:#1e1e1e;color:#fff;border:1px solid var(--border);outline:none}
+  .btn{background:var(--brand);color:#000;border:none;border-radius:10px;padding:.8rem 1rem;font-weight:800;cursor:pointer}
+  .btn.secondary{background:#2b2b2b;color:#fff;border:1px solid var(--border)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#111}
+  .card-body{padding:.75rem .85rem 1rem}
+  .title{font-weight:800;margin-bottom:4px}
+  .sub{color:#cfcfcf;font-size:.92rem}
+  .rowbtns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .hint{margin-top:10px;color:#bdbdbd;font-size:.85rem;line-height:1.4}
+  .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid var(--border);padding:.6rem .8rem;display:grid;grid-template-columns:320px 1fr 320px;gap:10px;align-items:center;z-index:10}
+  .now{display:flex;align-items:center;gap:.7rem;min-width:0}
+  .now img{width:56px;height:56px;border-radius:6px;object-fit:cover}
+  .t{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .a{color:#d0d0d0;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .controls{display:flex;flex-direction:column;align-items:center;gap:.45rem}
+  .buttons{display:flex;align-items:center;gap:.5rem}
+  .iconbtn{background:#1f1f1f;border:1px solid var(--border);color:#fff;width:34px;height:34px;border-radius:999px;display:grid;place-items:center;cursor:pointer}
+  .iconbtn.primary{background:var(--brand);color:#000;font-weight:900;width:40px;height:40px}
+  .progress{width:min(680px,92vw);display:flex;align-items:center;gap:8px}
+  .time{font-size:.75rem;color:#c6c6c6;width:36px;text-align:center}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;background:#2a2a2a;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--brand);border:none}
+  .right{display:flex;align-items:center;justify-content:flex-end;gap:.6rem}
+  .pill{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#1a1a1a;font-size:.8rem}
+  .note{margin-top:18px;color:#cfcfcf;font-size:.9rem;line-height:1.5}
+  @media(max-width:900px){.player{grid-template-columns:1fr;gap:.6rem}.right{justify-content:center}}
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -47,14 +48,21 @@
       <div class="logo">BuzzMusic</div>
     </header>
 
-    <div class="search"><input id="q" placeholder="Search songs…"></div>
+    <div class="add">
+      <input id="url" placeholder="Paste a HTTPS direct MP3 URL you have rights to use (e.g., Google Drive direct, SoundHelix)…" />
+      <button class="btn" id="add">Add to Library</button>
+      <button class="btn secondary" id="clear">Clear Library</button>
+    </div>
+    <div class="hint">
+      • Must be <b>HTTPS</b> (GitHub Pages blocks http).<br/>
+      • Examples (legal demos): SoundHelix Song 1/8.<br/>
+      • If inline play fails (host blocks), use “Open Direct”.
+    </div>
 
     <div id="list" class="grid"></div>
 
     <p class="note">
-      Tip: Ensure your Google Drive file is shared as <b>Anyone with the link → Viewer</b>.  
-      This page streams directly from <code>drive.google.com</code> over HTTPS. If playback fails
-      (quota/scan page), use “Open Direct” to play in a new tab.
+      ⚠️ Only add music you <b>own or are licensed to use</b> (royalty-free, your uploads, etc.). I can’t assist with infringing links.
     </p>
   </div>
 
@@ -86,121 +94,149 @@
     <audio id="audio" preload="none"></audio>
   </div>
 
-  <script>
-    // --- Google Drive helpers ---
-    const gdriveDirect = (id) => `https://drive.google.com/uc?export=download&id=${id}`;
-
-    // Your shared file ID from the link you gave:
-    const FILE_ID_FROM_YOU = "138HzI1mM47HkSd0jh2_FOSqiX6lCLaCx";
-
-    // Demo tracks (first one uses your Google Drive file)
-    const tracks = [
-      {
-        id: 'gd1',
-        title: 'Your Google Drive Track',
-        artist: 'BuzzMusic',
-        album: 'Drive Demo',
-        cover: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
-        gdriveId: FILE_ID_FROM_YOU
-      },
-      {
-        id: 'gd2',
-        title: 'Another Drive Track (change the ID)',
-        artist: 'BuzzMusic',
-        album: 'Drive Demo',
-        cover: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
-        gdriveId: FILE_ID_FROM_YOU // duplicate for demo; replace with another file id if you have one
-      }
-    ];
-
-    const $ = s => document.querySelector(s);
-    const list = $('#list'); const q = $('#q');
-    const audio = $('#audio'); const nowCover=$('#nowCover'); const nowTitle=$('#nowTitle'); const nowArtist=$('#nowArtist');
-    const btnPlay=$('#play'), btnPrev=$('#prev'), btnNext=$('#next');
-    const seek=$('#seek'), vol=$('#vol'); const tCur=$('#tCur'), tDur=$('#tDur'); const qCount=$('#qCount');
-
-    const state = { queue: [], current: null };
-
-    function fmtTime(sec){ sec=Math.round(sec||0); const m=Math.floor(sec/60); const s=(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
-
-    function srcFor(t){
-      if (t.gdriveId) return gdriveDirect(t.gdriveId);
-      return t.src || '';
+<script>
+  // Library persisted in localStorage
+  const DEFAULTS = [
+    {
+      id: 'bandit',
+      title: 'Bandit',
+      artist: 'SoundHelix (demo)',
+      cover: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
+      url: 'https://dl6.beelody.com/Free/2024/2/Don%20Toliver%20-%20Bandit%20%282024%29%20%5BBeelody%5D.mp3'
+    },
+    {
+      id: 'demo2',
+      title: 'SoundHelix Song 8',
+      artist: 'SoundHelix (demo)',
+      cover: 'https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?q=80&w=1200&auto=format&fit=crop',
+      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
     }
+  ];
 
-    function render(filter=''){
-      list.innerHTML='';
-      tracks
-        .filter(t => !filter || (`${t.title} ${t.artist} ${t.album}`).toLowerCase().includes(filter))
-        .forEach(t => {
-          const card = document.createElement('div'); card.className='card';
-          card.innerHTML = `
-            <img src="${t.cover}" alt="${t.title} cover"/>
-            <div class="card-body">
-              <div class="title">${t.title}</div>
-              <div class="sub">${t.artist} • ${t.album}</div>
-              <div class="btns">
-                <button class="btn" data-id="${t.id}">▶ Play</button>
-                <button class="btn secondary" data-open="${t.id}">🔗 Open Direct</button>
-              </div>
-            </div>`;
-          card.querySelector('[data-id]').onclick = () => playById(t.id);
-          card.querySelector('[data-open]').onclick = () => openDirect(t.id);
-          list.appendChild(card);
-        });
-    }
+  const $ = s => document.querySelector(s);
+  const list = $('#list'), urlIn = $('#url'), btnAdd = $('#add'), btnClear = $('#clear');
+  const audio = $('#audio'); const nowCover=$('#nowCover'), nowTitle=$('#nowTitle'), nowArtist=$('#nowArtist');
+  const btnPlay=$('#play'), btnPrev=$('#prev'), btnNext=$('#next');
+  const seek=$('#seek'), vol=$('#vol'); const tCur=$('#tCur'), tDur=$('#tDur'); const qCount=$('#qCount');
 
-    function playById(id){
-      const t = tracks.find(x => x.id === id); if(!t) return;
-      const url = srcFor(t);
-      // update UI
-      nowCover.src = t.cover; nowTitle.textContent = t.title; nowArtist.textContent = `${t.artist} • ${t.album}`;
-      if (!state.queue.includes(id)) state.queue.push(id);
-      state.current = id; qCount.textContent = `Queue: ${state.queue.length}`;
+  let library = loadLib();
+  let state = { queue: [], current: null };
 
-      audio.src = url;
-      audio.play().then(() => {
-        btnPlay.textContent = '⏸';
-      }).catch(err => {
-        // If Drive serves an interstitial (quota/scan), inline playback can fail. Offer direct open.
-        console.warn('Inline play failed:', err);
-        if (confirm('Inline playback failed. Open the file in a new tab?')) {
-          openDirect(id);
-        }
-      });
-    }
+  function loadLib(){
+    try { const s = JSON.parse(localStorage.getItem('buzzmusicLib')||'null'); if (s && Array.isArray(s) && s.length) return s; } catch(e){}
+    return DEFAULTS.slice();
+  }
+  function saveLib(){ localStorage.setItem('buzzmusicLib', JSON.stringify(library)); }
 
-    function openDirect(id){
-      const t = tracks.find(x => x.id === id); if(!t) return;
-      window.open(srcFor(t), '_blank', 'noopener,noreferrer');
-    }
+  function addTrackFromURL(raw){
+    if(!raw) return alert('Paste a HTTPS URL.');
+    raw = raw.trim();
+    try { new URL(raw); } catch(e){ return alert('Invalid URL.'); }
+    if(!raw.startsWith('https://')) return alert('Must start with https://');
 
-    // transport controls
-    btnPlay.onclick = () => { if(audio.paused){ audio.play().catch(()=>{}); btnPlay.textContent='⏸'; } else { audio.pause(); btnPlay.textContent='▶'; } };
-    btnPrev.onclick = () => step(-1);
-    btnNext.onclick = () => step(1);
-    function step(dir){
-      if(!state.queue.length) return;
-      const i = state.queue.indexOf(state.current);
-      const n = (i + dir + state.queue.length) % state.queue.length;
-      playById(state.queue[n]);
-    }
-
-    // progress & volume
-    vol.addEventListener('input', () => audio.volume = +vol.value);
-    seek.addEventListener('input', () => { if(audio.duration){ const p=seek.value/1000; audio.currentTime=p*audio.duration; }});
-    audio.addEventListener('timeupdate', () => {
-      const d=audio.duration||0, c=audio.currentTime||0;
-      tCur.textContent = fmtTime(c); tDur.textContent = fmtTime(d);
-      if(d) seek.value = Math.floor((c/d)*1000);
+    const id = 'u_' + Math.random().toString(36).slice(2);
+    library.unshift({
+      id, title: inferName(raw), artist: 'Custom URL', cover: pickCover(), url: raw
     });
-    audio.addEventListener('ended', () => step(1));
+    saveLib(); render(); urlIn.value='';
+  }
 
-    // search
-    q.addEventListener('input', e => render(e.target.value.trim().toLowerCase()));
+  function inferName(u){
+    try { const p = new URL(u).pathname; const last = decodeURIComponent(p.split('/').filter(Boolean).pop()||'track'); return last.replace(/\.[a-z0-9]+$/i,''); } catch(e){ return 'Custom Track'; }
+  }
+  function pickCover(){
+    const imgs = [
+      'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1499415479124-43c32433a620?q=80&w=1200&auto=format&fit=crop'
+    ];
+    return imgs[Math.floor(Math.random()*imgs.length)];
+  }
 
-    // init
-    render();
-  </script>
+  function render(filter=''){
+    list.innerHTML='';
+    library
+      .filter(t => !filter || (`${t.title} ${t.artist}`).toLowerCase().includes(filter))
+      .forEach(t => {
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <img src="${t.cover}" alt="${t.title} cover"/>
+          <div class="card-body">
+            <div class="title">${t.title}</div>
+            <div class="sub">${t.artist}</div>
+            <div class="rowbtns">
+              <button class="btn" data-id="${t.id}">▶ Play</button>
+              <button class="btn secondary" data-open="${t.id}">🔗 Open Direct</button>
+              <button class="btn secondary" data-remove="${t.id}">🗑 Remove</button>
+            </div>
+          </div>`;
+        card.querySelector('[data-id]').onclick = () => playById(t.id);
+        card.querySelector('[data-open]').onclick = () => openDirect(t.id);
+        card.querySelector('[data-remove]').onclick = () => removeById(t.id);
+        list.appendChild(card);
+      });
+  }
+
+  function removeById(id){
+    library = library.filter(x => x.id !== id);
+    saveLib(); render();
+  }
+
+  function playById(id){
+    const t = library.find(x => x.id === id); if(!t) return;
+    // update UI
+    nowCover.src = t.cover; nowTitle.textContent = t.title; nowArtist.textContent = t.artist || '';
+    if(!state.queue.includes(id)) state.queue.push(id);
+    state.current = id; qCount.textContent = `Queue: ${state.queue.length}`;
+
+    audio.src = t.url;
+    audio.play().then(() => {
+      btnPlay.textContent = '⏸';
+    }).catch(err => {
+      console.warn('Inline play failed:', err);
+      if (confirm('Inline playback failed. Some hosts block embeds. Open the URL in a new tab?')) {
+        openDirect(id);
+      }
+    });
+  }
+
+  function openDirect(id){
+    const t = library.find(x => x.id === id); if(!t) return;
+    window.open(t.url, '_blank', 'noopener,noreferrer');
+  }
+
+  // transport controls
+  btnPlay.onclick = () => { if(audio.paused){ audio.play().catch(()=>{}); btnPlay.textContent='⏸'; } else { audio.pause(); btnPlay.textContent='▶'; } };
+  btnPrev.onclick = () => step(-1);
+  btnNext.onclick = () => step(1);
+  function step(dir){
+    if(!state.queue.length) return;
+    const i = state.queue.indexOf(state.current);
+    const n = (i + dir + state.queue.length) % state.queue.length;
+    playById(state.queue[n]);
+  }
+
+  // progress & volume
+  vol.addEventListener('input', () => audio.volume = +vol.value);
+  const seekEl = document.getElementById('seek');
+  seekEl.addEventListener('input', () => { if(audio.duration){ const p=seekEl.value/1000; audio.currentTime=p*audio.duration; }});
+  audio.addEventListener('timeupdate', () => {
+    const d=audio.duration||0, c=audio.currentTime||0;
+    document.getElementById('tCur').textContent = fmt(c);
+    document.getElementById('tDur').textContent = fmt(d);
+    if(d) seekEl.value = Math.floor((c/d)*1000);
+  });
+  audio.addEventListener('ended', () => step(1));
+
+  // add box handlers
+  btnAdd.onclick = () => addTrackFromURL(urlIn.value);
+  btnClear.onclick = () => { if(confirm('Clear your saved library?')){ library = []; saveLib(); render(); } };
+  urlIn.addEventListener('keydown', e => { if(e.key==='Enter') btnAdd.click(); });
+
+  function fmt(sec){ sec=Math.round(sec||0); const m=Math.floor(sec/60); const s=(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
+
+  // init
+  render();
+</script>
 </body>
 </html>
