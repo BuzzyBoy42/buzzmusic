@@ -3,88 +3,250 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>BuzzMusic – Proxy Stream Tester</title>
+<title>BuzzMusic — One-File Stream Tester (/stream)</title>
 <style>
-  body{margin:0;background:#141414;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:900px;margin:40px auto 140px;padding:0 16px}
-  h1{color:#1db954;margin:0 0 12px}
-  .row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-  input[type=text]{flex:1;min-width:260px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#1f1f1f;color:#fff}
-  button,a.btn{background:#1db954;color:#000;border:none;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer;text-decoration:none}
-  button.secondary{background:#2b2b2b;color:#fff;border:1px solid rgba(255,255,255,.12)}
-  .panel{background:#171717;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin-top:16px}
-  pre{background:#0f0f0f;border:1px solid rgba(255,255,255,.12);padding:8px;border-radius:8px;white-space:pre-wrap;min-height:110px}
+  :root{--bg:#141414;--panel:#171717;--muted:#cbd5e1;--accent:#1db954;--border:rgba(255,255,255,.12)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:980px;margin:36px auto 160px;padding:0 16px}
+  h1{margin:0 0 10px;color:var(--accent);font-size:1.9rem}
+  p.lead{margin:0 0 18px;color:#d1d5db}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+  .tab{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#1f1f1f;cursor:pointer}
+  .tab.active{background:var(--accent);color:#000;font-weight:800;border-color:transparent}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;margin:12px 0}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  input[type=text]{flex:1;min-width:240px;padding:10px;border-radius:8px;border:1px solid var(--border);background:#1f1f1f;color:#fff}
+  button,a.btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 12px;font-weight:800;cursor:pointer;text-decoration:none}
+  button.secondary{background:#2b2b2b;color:#fff;border:1px solid var(--border)}
+  pre{background:#0f0f0f;border:1px solid var(--border);padding:8px;border-radius:8px;white-space:pre-wrap;min-height:120px}
   audio{width:100%}
   .muted{color:#bdbdbd}
+  .warn{padding:10px;border-radius:8px;background:#3b1d1d;border:1px solid #7f1d1d;color:#fca5a5;margin:10px 0}
+  .ok{padding:10px;border-radius:8px;background:#17351f;border:1px solid #166534;color:#86efac;margin:10px 0}
+  .drop{border:2px dashed #475569;border-radius:12px;display:flex;align-items:center;justify-content:center;height:120px;color:#cbd5e1}
+  code{background:#0b1220;padding:2px 6px;border-radius:6px;border:1px solid #263042}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>BuzzMusic – Proxy Stream Tester</h1>
-  <p class="muted">Streams through your Cloudflare Worker (HTTPS) → your home server (HTTP).</p>
+  <h1>BuzzMusic — One-File Stream Tester (/stream)</h1>
+  <p class="lead">This page targets <code>/stream/&lt;filename&gt;</code>. Run checks and play. If the page is <b>HTTPS</b>, remote HTTP URLs will be blocked (mixed content).</p>
 
-  <div class="row">
-    <input id="file" type="text" placeholder="Filename (e.g., CRUSH.mp3)"/>
-    <button id="probe">Probe</button>
-    <button id="play">Play</button>
-    <a id="open" class="btn" target="_blank" rel="noreferrer">Open Direct</a>
+  <div class="tabs">
+    <div class="tab active" data-tab="same">Same-origin /stream</div>
+    <div class="tab" data-tab="remote">Remote URL</div>
+    <div class="tab" data-tab="local">Local File</div>
+  </div>
+
+  <!-- Same-origin -->
+  <div class="panel" id="pane-same">
+    <p class="muted">This uses the same origin as this page: <code>./stream/&lt;file&gt;</code>. Example: <code>./stream/CRUSH.mp3</code></p>
+    <div class="row">
+      <input id="sameName" type="text" placeholder="Filename (e.g., CRUSH.mp3)" />
+      <button id="sameCheck" class="secondary">Run Checks</button>
+      <button id="samePlay">Play</button>
+      <a id="sameOpen" class="btn" target="_blank" rel="noreferrer">Open Direct</a>
+    </div>
+    <div id="sameWarn" class="warn" style="display:none"></div>
+    <div class="panel"><audio id="sameAudio" controls crossorigin="anonymous"></audio></div>
+    <pre id="sameOut">Enter a filename and click “Run Checks”.</pre>
+  </div>
+
+  <!-- Remote -->
+  <div class="panel" id="pane-remote" style="display:none">
+    <p class="muted">Enter a full URL, e.g. <code>http://97.119.213.15:3001/stream/CRUSH.mp3</code>. If this page is HTTPS and your URL is HTTP, the browser will block it.</p>
+    <div class="row">
+      <input id="remoteUrl" type="text" placeholder="https://example.com/stream/CRUSH.mp3" />
+      <button id="remoteCheck" class="secondary">Run Checks</button>
+      <button id="remotePlay">Play</button>
+      <a id="remoteOpen" class="btn" target="_blank" rel="noreferrer">Open Direct</a>
+    </div>
+    <div id="remoteWarn" class="warn" style="display:none"></div>
+    <div class="panel"><audio id="remoteAudio" controls crossorigin="anonymous"></audio></div>
+    <pre id="remoteOut">Paste a URL and click “Run Checks”.</pre>
+  </div>
+
+  <!-- Local -->
+  <div class="panel" id="pane-local" style="display:none">
+    <p class="muted">Drop a local audio file here (not uploaded anywhere; plays from your device).</p>
+    <div id="drop" class="drop">Drop audio file or click to choose</div>
+    <input id="fileInput" type="file" accept="audio/*" style="display:none"/>
+    <div class="panel"><audio id="localAudio" controls></audio></div>
+    <pre id="localOut">Drop a file to play it.</pre>
   </div>
 
   <div class="panel">
-    <h3>Audio</h3>
-    <audio id="audio" controls crossorigin="anonymous"></audio>
-  </div>
-
-  <div class="panel">
-    <h3>Diagnostics</h3>
-    <pre id="out">Enter a filename and click “Probe”.</pre>
+    <h3>Tips</h3>
+    <ul class="muted">
+      <li>Server should answer range requests with <code>206</code>, <code>Accept-Ranges: bytes</code>, and a valid <code>Content-Range</code> for smooth seeking.</li>
+      <li>If you see <em>No supported source</em>, you probably hit an HTML 404 page. Check path/case: <code>/stream/&lt;exact-filename&gt;</code>.</li>
+      <li>HTTPS page + HTTP stream = blocked. Either serve this page over HTTP on the same host, or use an HTTPS proxy/tunnel in front of your stream.</li>
+    </ul>
   </div>
 </div>
 
 <script>
 (() => {
-  // >>> SET THIS to your Worker (MUST end with /audio/)
-  const PROXY_BASE = "https://YOUR-WORKER-SUBDOMAIN.workers.dev/audio/";
-  // Probe endpoint is same host with /_probe
-  const PROBE_BASE = PROXY_BASE.replace(/\/audio\/?$/, "/_probe?file=");
+  const $  = s => document.querySelector(s);
+  const on = (el,ev,fn)=> el.addEventListener(ev,fn);
+  const fmt = s => { s=Math.round(s||0); const m=Math.floor(s/60), x=String(s%60).padStart(2,'0'); return m+':'+x; };
+  const isHttps = location.protocol === 'https:';
 
-  const $ = s => document.querySelector(s);
-  const file = $('#file'), audio = $('#audio'), out = $('#out'), open = $('#open');
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t => {
+    on(t,'click', () => {
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      $('#pane-same').style.display   = tab==='same'   ? '' : 'none';
+      $('#pane-remote').style.display = tab==='remote' ? '' : 'none';
+      $('#pane-local').style.display  = tab==='local'  ? '' : 'none';
+    });
+  });
 
-  file.value = 'CRUSH.mp3'; // default name
+  // ============================
+  // SAME-ORIGIN ./stream/<file>
+  // ============================
+  const same = {
+    name: $('#sameName'),
+    out:  $('#sameOut'),
+    warn: $('#sameWarn'),
+    open: $('#sameOpen'),
+    audio:$('#sameAudio')
+  };
+  same.name.value = 'CRUSH.mp3'; // default demo name
 
-  function urlFor(name){ return PROXY_BASE + encodeURIComponent((name||'').trim()); }
-  function probeUrl(name){ return PROBE_BASE + encodeURIComponent((name||'').trim()); }
-  function log(m){ out.textContent += (out.textContent ? "\n" : "") + m; out.scrollTop = out.scrollHeight; }
-  function reset(){ out.textContent = ''; }
+  function sameUrl(){
+    // Absolute URL to ./stream/<file> on the same origin
+    const base = new URL('stream/', location.href).href; // <-- /stream/ (not /audio/)
+    const file = encodeURIComponent((same.name.value||'').trim());
+    return base + file;
+  }
+  function sameLog(m){ same.out.textContent += (same.out.textContent? '\n':'') + m; same.out.scrollTop = same.out.scrollHeight; }
+  function sameReset(){ same.out.textContent=''; same.warn.style.display='none'; }
 
-  $('#probe').onclick = async () => {
-    reset();
-    const name = file.value || 'CRUSH.mp3';
-    open.href = urlFor(name);
-    log('Probing origin via Worker…');
-    try {
-      const r = await fetch(probeUrl(name), { cache:'no-store' });
-      const j = await r.json();
-      log(JSON.stringify(j, null, 2));
-      if (!j.ok) {
-        log('❌ Not playable yet. Fix origin path/filename or connectivity.');
-      } else if (j.status === 206 || j.status === 200) {
-        log('✅ Origin looks good. Try Play.');
-      } else {
-        log('⚠️ Unexpected status; the player may still fail.');
-      }
-    } catch (e) {
-      log('❌ Probe failed: ' + e.message);
+  on($('#sameCheck'),'click', async ()=>{
+    sameReset();
+    const u = sameUrl(); same.open.href = u;
+    await headAndRange(u, sameLog);
+  });
+  on($('#samePlay'),'click', ()=>{
+    sameReset();
+    const u = sameUrl(); same.open.href = u;
+    same.audio.src = u;
+    same.audio.play().catch(e=> sameLog('play() blocked: '+e.message));
+    wirePlayerLogs(same.audio, sameLog);
+  });
+
+  // ============================
+  // REMOTE URL
+  // ============================
+  const remote = {
+    url: $('#remoteUrl'),
+    out: $('#remoteOut'),
+    warn:$('#remoteWarn'),
+    open:$('#remoteOpen'),
+    audio:$('#remoteAudio')
+  };
+  remote.url.value = 'http://97.119.213.15:3001/stream/CRUSH.mp3'; // your server
+
+  function remoteLog(m){ remote.out.textContent += (remote.out.textContent? '\n':'') + m; remote.out.scrollTop = remote.out.scrollHeight; }
+  function remoteReset(){ remote.out.textContent=''; remote.warn.style.display='none'; }
+
+  function showMixedIfNeeded(u){
+    const http = /^http:\/\//i.test(u);
+    if (isHttps && http) {
+      remote.warn.innerHTML = '⚠️ Mixed content: this page is HTTPS but the stream URL is HTTP. The browser will block it. Serve this page over HTTP on the same host as /stream/, or put an HTTPS proxy/tunnel in front of your stream.';
+      remote.warn.style.display='';
+      return true;
     }
-  };
+    return false;
+  }
 
-  $('#play').onclick = () => {
-    const name = file.value || 'CRUSH.mp3';
-    const u = urlFor(name); open.href = u;
-    audio.src = u;
-    audio.play().catch(e => log('play() rejected: ' + e.message));
-  };
+  on($('#remoteCheck'),'click', async ()=>{
+    remoteReset();
+    const u = (remote.url.value || '').trim(); remote.open.href = u;
+    if (showMixedIfNeeded(u)) return;
+    await headAndRange(u, remoteLog);
+  });
+
+  on($('#remotePlay'),'click', ()=>{
+    remoteReset();
+    const u = (remote.url.value || '').trim(); remote.open.href = u;
+    if (showMixedIfNeeded(u)) return;
+    remote.audio.src = u;
+    remote.audio.play().catch(e=> remoteLog('play() blocked: '+e.message));
+    wirePlayerLogs(remote.audio, remoteLog);
+  });
+
+  // ============================
+  // LOCAL FILE
+  // ============================
+  const drop = $('#drop'), input = $('#fileInput'), localOut = $('#localOut'), localAudio = $('#localAudio');
+  function localLog(m){ localOut.textContent += (localOut.textContent? '\n':'') + m; localOut.scrollTop = localOut.scrollHeight; }
+
+  ;['dragenter','dragover'].forEach(ev=> on(drop, ev, e=>{ e.preventDefault(); drop.style.borderColor='#1db954'; }));
+  ;['dragleave','drop'].forEach(ev=> on(drop, ev, e=>{ e.preventDefault(); drop.style.borderColor='#475569'; }));
+  on(drop,'drop', e=>{
+    const f = e.dataTransfer.files?.[0]; if(!f) return;
+    const url = URL.createObjectURL(f);
+    localAudio.src = url; localAudio.play().catch(()=>{});
+    localLog('Playing local: '+f.name);
+  });
+  on(drop,'click', ()=> input.click());
+  on(input,'change', ()=> {
+    const f = input.files?.[0]; if(!f) return;
+    const url = URL.createObjectURL(f);
+    localAudio.src = url; localAudio.play().catch(()=>{});
+    localLog('Playing local: '+f.name);
+  });
+
+  // ============================
+  // Shared diagnostics
+  // ============================
+  async function headAndRange(url, log){
+    try{
+      // HEAD (not all servers implement; not fatal)
+      try {
+        const h = await fetch(url, { method:'HEAD', cache:'no-store' });
+        log('HEAD → '+h.status);
+        logHdr(h.headers, log);
+      } catch { log('HEAD failed (not fatal)'); }
+
+      // Range probe (seek check)
+      const r = await fetch(url, { method:'GET', headers:{ Range:'bytes=0-1' }, cache:'no-store' });
+      log('GET Range 0-1 → '+r.status);
+      logHdr(r.headers, log);
+      if (r.status === 206) log('✅ Byte-range OK (seeking will work).');
+      else if (r.status === 200) log('ℹ️ 200 OK (server ignored Range; seeking may be limited).');
+      else if (r.status === 404) log('❌ 404 Not Found — verify /stream/<filename> and casing.');
+      else log('⚠️ Unexpected status.');
+    }catch(e){
+      log('❌ Fetch failed: '+e.message);
+    }
+  }
+  function logHdr(h, log){
+    log('Accept-Ranges: '+(h.get('Accept-Ranges')||'(none)'));
+    log('Content-Range: '+(h.get('Content-Range')||'(none)'));
+    log('Content-Type:  '+(h.get('Content-Type')||'(none)'));
+    log('Content-Length:'+(h.get('Content-Length')||'(none)'));
+  }
+  function wirePlayerLogs(a, log){
+    const evs = ['loadstart','loadedmetadata','loadeddata','canplay','canplaythrough','play','playing','pause','stalled','waiting','seeking','seeked','ended','error','durationchange','timeupdate','progress','suspend','abort','emptied'];
+    evs.forEach(ev => {
+      const fn = ()=> {
+        if (ev==='error'){
+          const err=a.error; log('error'+(err? ' code='+err.code : ''));
+        } else if (ev==='timeupdate') {
+          log('timeupdate '+fmt(a.currentTime)+' / '+fmt(a.duration||0));
+        } else {
+          log(ev);
+        }
+      };
+      a.addEventListener(ev, fn, { once: ev!=='timeupdate' && ev!=='progress' });
+    });
+  }
 })();
 </script>
 </body>
