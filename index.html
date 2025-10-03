@@ -3,250 +3,189 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>BuzzMusic — One-File Stream Tester (/stream)</title>
+<title>BuzzMusic Player</title>
 <style>
   :root{--bg:#141414;--panel:#171717;--muted:#cbd5e1;--accent:#1db954;--border:rgba(255,255,255,.12)}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:980px;margin:36px auto 160px;padding:0 16px}
+  .wrap{max-width:920px;margin:32px auto 140px;padding:0 16px}
   h1{margin:0 0 10px;color:var(--accent);font-size:1.9rem}
-  p.lead{margin:0 0 18px;color:#d1d5db}
-  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
-  .tab{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#1f1f1f;cursor:pointer}
-  .tab.active{background:var(--accent);color:#000;font-weight:800;border-color:transparent}
-  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;margin:12px 0}
-  .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-  input[type=text]{flex:1;min-width:240px;padding:10px;border-radius:8px;border:1px solid var(--border);background:#1f1f1f;color:#fff}
-  button,a.btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 12px;font-weight:800;cursor:pointer;text-decoration:none}
-  button.secondary{background:#2b2b2b;color:#fff;border:1px solid var(--border)}
-  pre{background:#0f0f0f;border:1px solid var(--border);padding:8px;border-radius:8px;white-space:pre-wrap;min-height:120px}
-  audio{width:100%}
   .muted{color:#bdbdbd}
-  .warn{padding:10px;border-radius:8px;background:#3b1d1d;border:1px solid #7f1d1d;color:#fca5a5;margin:10px 0}
-  .ok{padding:10px;border-radius:8px;background:#17351f;border:1px solid #166534;color:#86efac;margin:10px 0}
-  .drop{border:2px dashed #475569;border-radius:12px;display:flex;align-items:center;justify-content:center;height:120px;color:#cbd5e1}
-  code{background:#0b1220;padding:2px 6px;border-radius:6px;border:1px solid #263042}
+  .banner{display:none;margin:10px 0;padding:10px;border-radius:10px}
+  .warn{background:#3b1d1d;border:1px solid #7f1d1d;color:#fca5a5}
+  .ok{background:#17351f;border:1px solid #166534;color:#86efac}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;margin:12px 0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=text]{flex:1;min-width:240px;padding:10px;border-radius:8px;border:1px solid var(--border);background:#1f1f1f;color:#fff}
+  button{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 12px;font-weight:800;cursor:pointer}
+  button.secondary{background:#2b2b2b;color:#fff;border:1px solid var(--border)}
+  .list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .track{display:flex;justify-content:space-between;gap:8px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#1b1b1b;cursor:pointer}
+  .title{font-weight:800}
+  .time{color:#cbd5e1}
+  audio{width:100%}
+  .controls{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .timepair{min-width:80px;text-align:center;color:#cbd5e1}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;background:#2a2a2a}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#1db954;border:none}
+  a.btn{display:inline-block;background:#2b2b2b;color:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-decoration:none}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>BuzzMusic — One-File Stream Tester (/stream)</h1>
-  <p class="lead">This page targets <code>/stream/&lt;filename&gt;</code>. Run checks and play. If the page is <b>HTTPS</b>, remote HTTP URLs will be blocked (mixed content).</p>
+  <h1>BuzzMusic Player</h1>
+  <p class="muted">Streams from <code>http://97.119.213.15:3001/stream/&lt;file&gt;</code>. If this page is on <b>HTTPS</b>, the browser will block HTTP audio (mixed content). See banner below.</p>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="same">Same-origin /stream</div>
-    <div class="tab" data-tab="remote">Remote URL</div>
-    <div class="tab" data-tab="local">Local File</div>
-  </div>
+  <div id="ok"   class="banner ok">✅ Same-scheme OK. This page is <span id="pgScheme"></span> and the stream is <span id="stScheme"></span>. Playback should work.</div>
+  <div id="warn" class="banner warn">⚠️ Mixed content: This page is <span id="pgScheme2"></span> but your stream is <span id="stScheme2"></span>. Browsers block this. Either host this page over HTTP on the same server, or put an HTTPS proxy/tunnel in front of your stream and point the player to that HTTPS URL.</div>
 
-  <!-- Same-origin -->
-  <div class="panel" id="pane-same">
-    <p class="muted">This uses the same origin as this page: <code>./stream/&lt;file&gt;</code>. Example: <code>./stream/CRUSH.mp3</code></p>
-    <div class="row">
-      <input id="sameName" type="text" placeholder="Filename (e.g., CRUSH.mp3)" />
-      <button id="sameCheck" class="secondary">Run Checks</button>
-      <button id="samePlay">Play</button>
-      <a id="sameOpen" class="btn" target="_blank" rel="noreferrer">Open Direct</a>
+  <div class="grid">
+    <div class="panel">
+      <h3>Playlist</h3>
+      <div class="row">
+        <input id="base" type="text" placeholder="Stream base" />
+        <button id="add" class="secondary">Add track</button>
+        <a id="openBase" class="btn" target="_blank" rel="noreferrer">Open base</a>
+      </div>
+      <div class="list" id="list"></div>
     </div>
-    <div id="sameWarn" class="warn" style="display:none"></div>
-    <div class="panel"><audio id="sameAudio" controls crossorigin="anonymous"></audio></div>
-    <pre id="sameOut">Enter a filename and click “Run Checks”.</pre>
-  </div>
-
-  <!-- Remote -->
-  <div class="panel" id="pane-remote" style="display:none">
-    <p class="muted">Enter a full URL, e.g. <code>http://97.119.213.15:3001/stream/CRUSH.mp3</code>. If this page is HTTPS and your URL is HTTP, the browser will block it.</p>
-    <div class="row">
-      <input id="remoteUrl" type="text" placeholder="https://example.com/stream/CRUSH.mp3" />
-      <button id="remoteCheck" class="secondary">Run Checks</button>
-      <button id="remotePlay">Play</button>
-      <a id="remoteOpen" class="btn" target="_blank" rel="noreferrer">Open Direct</a>
+    <div class="panel">
+      <h3>Player</h3>
+      <div class="row">
+        <button id="prev" class="secondary">⏮</button>
+        <button id="toggle">▶</button>
+        <button id="next" class="secondary">⏭</button>
+        <span id="now" class="muted" style="flex:1;min-width:120px">Nothing playing</span>
+        <a id="openTrack" class="btn" target="_blank" rel="noreferrer">Open URL</a>
+      </div>
+      <audio id="audio" controls crossorigin="anonymous"></audio>
+      <div class="controls">
+        <span id="tcur" class="timepair">0:00</span>
+        <input id="seek" type="range" min="0" max="1000" value="0"/>
+        <span id="tdur" class="timepair">0:00</span>
+      </div>
+      <div class="controls">
+        <span class="muted">Volume</span>
+        <input id="vol" type="range" min="0" max="1" step="0.01" value="0.9" style="width:160px"/>
+      </div>
     </div>
-    <div id="remoteWarn" class="warn" style="display:none"></div>
-    <div class="panel"><audio id="remoteAudio" controls crossorigin="anonymous"></audio></div>
-    <pre id="remoteOut">Paste a URL and click “Run Checks”.</pre>
-  </div>
-
-  <!-- Local -->
-  <div class="panel" id="pane-local" style="display:none">
-    <p class="muted">Drop a local audio file here (not uploaded anywhere; plays from your device).</p>
-    <div id="drop" class="drop">Drop audio file or click to choose</div>
-    <input id="fileInput" type="file" accept="audio/*" style="display:none"/>
-    <div class="panel"><audio id="localAudio" controls></audio></div>
-    <pre id="localOut">Drop a file to play it.</pre>
   </div>
 
   <div class="panel">
-    <h3>Tips</h3>
+    <h3>Quick Tips</h3>
     <ul class="muted">
-      <li>Server should answer range requests with <code>206</code>, <code>Accept-Ranges: bytes</code>, and a valid <code>Content-Range</code> for smooth seeking.</li>
-      <li>If you see <em>No supported source</em>, you probably hit an HTML 404 page. Check path/case: <code>/stream/&lt;exact-filename&gt;</code>.</li>
-      <li>HTTPS page + HTTP stream = blocked. Either serve this page over HTTP on the same host, or use an HTTPS proxy/tunnel in front of your stream.</li>
+      <li>Make sure the file really exists at <code>/stream/&lt;filename&gt;</code> (matching case). Try opening it directly.</li>
+      <li>For smooth seeking, your server should support byte ranges: responses to ranged requests return <code>206</code> with <code>Accept-Ranges: bytes</code> and a valid <code>Content-Range</code>.</li>
+      <li>Hosting this page on <b>HTTPS</b> while the stream is <b>HTTP</b> will be blocked. Fix by serving this page on HTTP (same box), or by putting an HTTPS reverse proxy (Cloudflare Worker/Tunnel, Caddy, nginx) in front of your stream and using that HTTPS URL as your base.</li>
     </ul>
   </div>
 </div>
 
 <script>
 (() => {
-  const $  = s => document.querySelector(s);
-  const on = (el,ev,fn)=> el.addEventListener(ev,fn);
+  // === Edit this if you want a different default ===
+  const DEFAULT_BASE = "http://97.119.213.15:3001/stream/"; // must end with a slash
+
+  const $ = s => document.querySelector(s);
   const fmt = s => { s=Math.round(s||0); const m=Math.floor(s/60), x=String(s%60).padStart(2,'0'); return m+':'+x; };
-  const isHttps = location.protocol === 'https:';
 
-  // Tabs
-  document.querySelectorAll('.tab').forEach(t => {
-    on(t,'click', () => {
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      const tab = t.dataset.tab;
-      $('#pane-same').style.display   = tab==='same'   ? '' : 'none';
-      $('#pane-remote').style.display = tab==='remote' ? '' : 'none';
-      $('#pane-local').style.display  = tab==='local'  ? '' : 'none';
-    });
-  });
+  // Elements
+  const baseIn = $('#base');
+  const addBtn = $('#add');
+  const listEl = $('#list');
+  const audio  = $('#audio');
+  const nowEl  = $('#now');
+  const openBase = $('#openBase');
+  const openTrack= $('#openTrack');
+  const tcur = $('#tcur'), tdur = $('#tdur'), seek = $('#seek'), vol = $('#vol');
+  const btnPrev = $('#prev'), btnNext = $('#next'), btnToggle = $('#toggle');
 
-  // ============================
-  // SAME-ORIGIN ./stream/<file>
-  // ============================
-  const same = {
-    name: $('#sameName'),
-    out:  $('#sameOut'),
-    warn: $('#sameWarn'),
-    open: $('#sameOpen'),
-    audio:$('#sameAudio')
+  // Mixed-content banner
+  const pgScheme = location.protocol.replace(':',''); // http or https
+  const stScheme = DEFAULT_BASE.split(':')[0];        // http or https
+  $('#pgScheme').textContent  = pgScheme.toUpperCase();
+  $('#stScheme').textContent  = stScheme.toUpperCase();
+  $('#pgScheme2').textContent = pgScheme.toUpperCase();
+  $('#stScheme2').textContent = stScheme.toUpperCase();
+
+  if (pgScheme === stScheme) { $('#ok').style.display='block'; }
+  else { $('#warn').style.display='block'; }
+
+  // State
+  let tracks = [
+    { title: 'CRUSH.mp3', file: 'CRUSH.mp3', duration: 224 },
+  ];
+  let idx = -1; // nothing selected
+
+  // Init
+  baseIn.value = DEFAULT_BASE;
+  openBase.href = baseIn.value;
+  renderList();
+
+  // Handlers
+  addBtn.onclick = () => {
+    const name = prompt('Filename at /stream/', 'MySong.mp3');
+    if (!name) return;
+    tracks.push({ title: name, file: name });
+    renderList();
   };
-  same.name.value = 'CRUSH.mp3'; // default demo name
 
-  function sameUrl(){
-    // Absolute URL to ./stream/<file> on the same origin
-    const base = new URL('stream/', location.href).href; // <-- /stream/ (not /audio/)
-    const file = encodeURIComponent((same.name.value||'').trim());
-    return base + file;
-  }
-  function sameLog(m){ same.out.textContent += (same.out.textContent? '\n':'') + m; same.out.scrollTop = same.out.scrollHeight; }
-  function sameReset(){ same.out.textContent=''; same.warn.style.display='none'; }
-
-  on($('#sameCheck'),'click', async ()=>{
-    sameReset();
-    const u = sameUrl(); same.open.href = u;
-    await headAndRange(u, sameLog);
-  });
-  on($('#samePlay'),'click', ()=>{
-    sameReset();
-    const u = sameUrl(); same.open.href = u;
-    same.audio.src = u;
-    same.audio.play().catch(e=> sameLog('play() blocked: '+e.message));
-    wirePlayerLogs(same.audio, sameLog);
-  });
-
-  // ============================
-  // REMOTE URL
-  // ============================
-  const remote = {
-    url: $('#remoteUrl'),
-    out: $('#remoteOut'),
-    warn:$('#remoteWarn'),
-    open:$('#remoteOpen'),
-    audio:$('#remoteAudio')
-  };
-  remote.url.value = 'http://97.119.213.15:3001/stream/CRUSH.mp3'; // your server
-
-  function remoteLog(m){ remote.out.textContent += (remote.out.textContent? '\n':'') + m; remote.out.scrollTop = remote.out.scrollHeight; }
-  function remoteReset(){ remote.out.textContent=''; remote.warn.style.display='none'; }
-
-  function showMixedIfNeeded(u){
-    const http = /^http:\/\//i.test(u);
-    if (isHttps && http) {
-      remote.warn.innerHTML = '⚠️ Mixed content: this page is HTTPS but the stream URL is HTTP. The browser will block it. Serve this page over HTTP on the same host as /stream/, or put an HTTPS proxy/tunnel in front of your stream.';
-      remote.warn.style.display='';
-      return true;
-    }
-    return false;
-  }
-
-  on($('#remoteCheck'),'click', async ()=>{
-    remoteReset();
-    const u = (remote.url.value || '').trim(); remote.open.href = u;
-    if (showMixedIfNeeded(u)) return;
-    await headAndRange(u, remoteLog);
-  });
-
-  on($('#remotePlay'),'click', ()=>{
-    remoteReset();
-    const u = (remote.url.value || '').trim(); remote.open.href = u;
-    if (showMixedIfNeeded(u)) return;
-    remote.audio.src = u;
-    remote.audio.play().catch(e=> remoteLog('play() blocked: '+e.message));
-    wirePlayerLogs(remote.audio, remoteLog);
-  });
-
-  // ============================
-  // LOCAL FILE
-  // ============================
-  const drop = $('#drop'), input = $('#fileInput'), localOut = $('#localOut'), localAudio = $('#localAudio');
-  function localLog(m){ localOut.textContent += (localOut.textContent? '\n':'') + m; localOut.scrollTop = localOut.scrollHeight; }
-
-  ;['dragenter','dragover'].forEach(ev=> on(drop, ev, e=>{ e.preventDefault(); drop.style.borderColor='#1db954'; }));
-  ;['dragleave','drop'].forEach(ev=> on(drop, ev, e=>{ e.preventDefault(); drop.style.borderColor='#475569'; }));
-  on(drop,'drop', e=>{
-    const f = e.dataTransfer.files?.[0]; if(!f) return;
-    const url = URL.createObjectURL(f);
-    localAudio.src = url; localAudio.play().catch(()=>{});
-    localLog('Playing local: '+f.name);
-  });
-  on(drop,'click', ()=> input.click());
-  on(input,'change', ()=> {
-    const f = input.files?.[0]; if(!f) return;
-    const url = URL.createObjectURL(f);
-    localAudio.src = url; localAudio.play().catch(()=>{});
-    localLog('Playing local: '+f.name);
-  });
-
-  // ============================
-  // Shared diagnostics
-  // ============================
-  async function headAndRange(url, log){
-    try{
-      // HEAD (not all servers implement; not fatal)
-      try {
-        const h = await fetch(url, { method:'HEAD', cache:'no-store' });
-        log('HEAD → '+h.status);
-        logHdr(h.headers, log);
-      } catch { log('HEAD failed (not fatal)'); }
-
-      // Range probe (seek check)
-      const r = await fetch(url, { method:'GET', headers:{ Range:'bytes=0-1' }, cache:'no-store' });
-      log('GET Range 0-1 → '+r.status);
-      logHdr(r.headers, log);
-      if (r.status === 206) log('✅ Byte-range OK (seeking will work).');
-      else if (r.status === 200) log('ℹ️ 200 OK (server ignored Range; seeking may be limited).');
-      else if (r.status === 404) log('❌ 404 Not Found — verify /stream/<filename> and casing.');
-      else log('⚠️ Unexpected status.');
-    }catch(e){
-      log('❌ Fetch failed: '+e.message);
-    }
-  }
-  function logHdr(h, log){
-    log('Accept-Ranges: '+(h.get('Accept-Ranges')||'(none)'));
-    log('Content-Range: '+(h.get('Content-Range')||'(none)'));
-    log('Content-Type:  '+(h.get('Content-Type')||'(none)'));
-    log('Content-Length:'+(h.get('Content-Length')||'(none)'));
-  }
-  function wirePlayerLogs(a, log){
-    const evs = ['loadstart','loadedmetadata','loadeddata','canplay','canplaythrough','play','playing','pause','stalled','waiting','seeking','seeked','ended','error','durationchange','timeupdate','progress','suspend','abort','emptied'];
-    evs.forEach(ev => {
-      const fn = ()=> {
-        if (ev==='error'){
-          const err=a.error; log('error'+(err? ' code='+err.code : ''));
-        } else if (ev==='timeupdate') {
-          log('timeupdate '+fmt(a.currentTime)+' / '+fmt(a.duration||0));
-        } else {
-          log(ev);
-        }
-      };
-      a.addEventListener(ev, fn, { once: ev!=='timeupdate' && ev!=='progress' });
+  function renderList(){
+    listEl.innerHTML = '';
+    tracks.forEach((t,i) => {
+      const row = document.createElement('div'); row.className='track';
+      row.innerHTML = `<span class="title">${t.title}</span><span class="time">${t.duration?fmt(t.duration):''}</span>`;
+      row.onclick = () => playIndex(i);
+      listEl.appendChild(row);
     });
   }
+
+  function urlFor(file){
+    const base = baseIn.value.trim();
+    const ensure = base.endsWith('/') ? base : base + '/';
+    return ensure + encodeURIComponent(file);
+  }
+
+  function playIndex(i){
+    idx = i;
+    const t = tracks[i];
+    const u = urlFor(t.file);
+    audio.src = u;
+    audio.play().catch(()=>{});
+    nowEl.textContent = t.title;
+    openTrack.href = u;
+    btnToggle.textContent = '⏸';
+  }
+
+  btnPrev.onclick = () => { if (tracks.length){ idx = (idx-1+tracks.length)%tracks.length; playIndex(idx); } };
+  btnNext.onclick = () => { if (tracks.length){ idx = (idx+1)%tracks.length; playIndex(idx); } };
+  btnToggle.onclick = () => {
+    if (audio.paused){ audio.play().catch(()=>{}); btnToggle.textContent='⏸'; }
+    else { audio.pause(); btnToggle.textContent='▶'; }
+  };
+
+  // Seek & volume
+  vol.oninput = () => audio.volume = +vol.value;
+  seek.oninput = () => { if (audio.duration) audio.currentTime = (seek.value/1000)*audio.duration; };
+  audio.ontimeupdate = () => {
+    const d=audio.duration||0, c=audio.currentTime||0;
+    tcur.textContent = fmt(c); tdur.textContent = fmt(d);
+    if (d) seek.value = Math.floor(1000*c/d);
+  };
+  audio.onended = () => btnNext.click();
+
+  // Keyboard
+  window.addEventListener('keydown', e => {
+    if (['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (e.code === 'Space'){ e.preventDefault(); btnToggle.click(); }
+    if (e.code === 'ArrowRight'){ audio.currentTime = Math.min((audio.currentTime||0)+5, audio.duration||Infinity); }
+    if (e.code === 'ArrowLeft'){  audio.currentTime = Math.max((audio.currentTime||0)-5, 0); }
+  });
+
+  // If you want to auto-start CRUSH on load, uncomment:
+  // playIndex(0);
 })();
 </script>
 </body>
