@@ -112,7 +112,7 @@
 
   <script>
     /********* CONFIG: your proxy base (HTTPS) *********/
-    const PROXY_BASE = "https://buzzmusic.pages.dev/proxy/"; // ✅ your Pages URL
+    const PROXY_BASE = "https://1ab3344f.buzzmusic.pages.dev/proxy/"; // ✅ your Pages URL
 
     /********* Sample tracks (replace with your real files) *********/
     const tracks = [
@@ -207,10 +207,10 @@
       state.current={ id }; queueCount.textContent=`Queue: ${state.queue.length}`;
       nowCover.src=t.cover; nowTitle.textContent=t.title; nowArtist.textContent=`${t.artist} • ${t.album}`;
       audio.src = srcFor(t);
-      audio.play().then(()=>{ btnPlay.textContent='⏸'; }).catch((e)=>{ alert('Playback failed. Check that buzzmusic.pages.dev is reachable and the file exists.'); console.error(e); });
+      audio.play().then(()=>{ btnPlay.textContent='⏸'; }).catch((e)=>{ alert('Playback failed. Check the proxy URL and file name.'); console.error(e); });
     }
     function nextInQueue(){ if(!state.queue.length){ audio.pause(); btnPlay.textContent='▶'; return; } const i=state.queue.indexOf(state.current?.id); const next=(i>=0 && i<state.queue.length-1)? state.queue[i+1] : state.queue[0]; if(next) playTrack(next); }
-    function prevInQueue(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current?.id); const prev=(i>0)? state.queue[i-1] : state.queue[state.queue.length-1]; if(prev) playTrack(prev); }
+    function prevInQueue(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current?.id); const prev=(i>0)? state.queue[i-1] : state.queue[state.length-1]; if(prev) playTrack(prev); }
     function fmt(s){ s=Math.round(s); const m=Math.floor(s/60); const r=(s%60).toString().padStart(2,'0'); return `${m}:${r}`; }
 
     function wirePlayer(){
@@ -231,7 +231,7 @@
 
   <br>
   <p style="text-align:center;color:#c9c9c9;font-size:.9rem;max-width:900px;margin:0 auto 60px;line-height:1.5">
-    ✅ Streams inline over HTTPS via <code>https://buzzmusic.pages.dev/proxy/</code>. Replace the sample filenames with tracks you have rights to use.
+    ✅ Streams inline over HTTPS via <code>https://1ab3344f.buzzmusic.pages.dev/proxy/</code>. Replace sample filenames with your real tracks.
   </p>
 </body>
 </html>
