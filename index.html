@@ -18,13 +18,14 @@
     .container{width:95%;max-width:1100px;margin:0 auto 110px}
     .section{margin:18px 0}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .18s}
+    .card:hover{transform:translateY(-2px)}
     .cover{width:100%;aspect-ratio:1/1;object-fit:cover;background:#111}
     .card-body{padding:.7rem .8rem 1rem}
     .title{font-weight:800}
     .sub{color:#b8b8b8;font-size:.9rem}
-    .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid var(--border);padding:.7rem .8rem;display:grid;grid-template-columns:320px 1fr 320px;gap:10px;align-items:center}
-    .now{display:flex;gap:.6rem;align-items:center}
+    .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid var(--border);padding:.7rem .8rem;display:grid;grid-template-columns:320px 1fr 320px;gap:10px;align-items:center;z-index:5}
+    .now{display:flex;gap:.6rem;align-items:center;min-width:0}
     .now img{width:56px;height:56px;border-radius:6px;object-fit:cover}
     .controls{display:flex;flex-direction:column;align-items:center;gap:.4rem}
     .buttons{display:flex;gap:.5rem}
@@ -36,8 +37,9 @@
     .pill{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#1a1a1a}
     .diag{background:#171717;border:1px solid var(--border);border-radius:12px;padding:12px}
     .row{display:grid;grid-template-columns:40px 1fr 120px 70px;gap:.5rem;padding:.55rem .7rem;border-bottom:1px dashed var(--border);align-items:center}
-    .notice{position:fixed;top:10px;right:10px;background:#222;border:1px solid var(--border);padding:.6rem .8rem;border-radius:8px;display:none}
+    .notice{position:fixed;top:10px;right:10px;background:#222;border:1px solid var(--border);padding:.6rem .8rem;border-radius:8px;display:none;white-space:pre-wrap;max-width:80ch}
     .notice.show{display:block}
+    a.link{color:#8ab4f8;text-decoration:none}
     @media(max-width:900px){.app{grid-template-columns:1fr}.player{grid-template-columns:1fr}.now{justify-content:center}}
   </style>
 </head>
@@ -53,6 +55,10 @@
       <label class="nav-item" for="localFiles">➕ Add Local Files
         <input id="localFiles" type="file" accept="audio/*" multiple style="display:none">
       </label>
+    </div>
+    <div style="margin-top:1rem;font-size:.85rem;color:#cfcfcf;opacity:.8">
+      Put files here in your repo:<br><code>audio/&lt;your-song.mp3&gt;</code><br><br>
+      URL looks like:<br><code>https://USERNAME.github.io/REPO/audio/Your%20Song.mp3</code>
     </div>
   </aside>
 
@@ -117,11 +123,9 @@
 
 <script>
 (() => {
-  // Compute base path that works for project pages (https://user.github.io/repo/) and root pages.
-  const BASE = new URL('.', location.href).pathname; // ends with '/'
+  // ---- Paths that auto-work on GitHub Pages (both user and project pages) ----
   const STREAM_BASE = new URL('audio/', location.href).href; // absolute HTTPS to /audio/
-
-  // Your files must exist at: <repo>/audio/<name>.mp3
+  // Put your actual filenames in the tracks list (they must exist in /audio/)
   const tracks = [
     {id:'t1', title:'CRUSH', artist:'Luxe City', album:'Neon Nights',
      cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
@@ -135,16 +139,17 @@
   const $ = s => document.querySelector(s);
   const fmt = s => { s=Math.round(s||0); const m=Math.floor(s/60); const x=(s%60).toString().padStart(2,'0'); return `${m}:${x}`; };
   const urlFor = f => STREAM_BASE + encodeURIComponent(f);
+  const toast = msg => { const n=$("#notice"); n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'), 4000); };
 
   // ---- render ----
   function card(t){
     const d=document.createElement('div'); d.className='card';
-    d.innerHTML = \`<img class="cover" src="\${t.cover}" alt=""><div class="card-body"><div class="title">\${t.title}</div><div class="sub">\${t.artist} • \${t.album}</div></div>\`;
+    d.innerHTML = `<img class="cover" src="${t.cover}" alt=""><div class="card-body"><div class="title">${t.title}</div><div class="sub">${t.artist} • ${t.album}</div></div>`;
     d.onclick = ()=> playById(t.id, true);
     return d;
   }
   function render(filter=''){
-    const f=x => (\`\${x.title} \${x.artist} \${x.album}\`).toLowerCase().includes(filter);
+    const f=x => (`${x.title} ${x.artist} ${x.album}`).toLowerCase().includes(filter);
     const fea = tracks.slice(0,3).filter(f);
     const all = tracks.filter(f);
     const gF=$("#gridFeatured"); gF.innerHTML=""; fea.forEach(t=>gF.appendChild(card(t)));
@@ -163,13 +168,13 @@
   audio.ontimeupdate=()=>{ const d=audio.duration||0,c=audio.currentTime||0; tCur.textContent=fmt(c); tDur.textContent=fmt(d); if(d) seek.value=Math.floor(1000*c/d); };
   audio.onended=()=> next();
 
-  function setNow(t){ nowCover.src=t.cover; nowTitle.textContent=t.title; nowArtist.textContent=\`\${t.artist} • \${t.album}\`; bPlay.textContent='⏸'; }
-  function addToQueue(id){ if(!state.queue.includes(id)) state.queue.push(id); qCount.textContent=\`Queue: \${state.queue.length}\`; }
+  function setNow(t){ nowCover.src=t.cover; nowTitle.textContent=t.title; nowArtist.textContent=`${t.artist} • ${t.album}`; bPlay.textContent='⏸'; }
+  function addToQueue(id){ if(!state.queue.includes(id)) state.queue.push(id); qCount.textContent=`Queue: ${state.queue.length}`; }
   function playById(id, bump=false){
     const t=tracks.find(x=>x.id===id); if(!t) return;
     addToQueue(id);
     if(bump){ const i=state.queue.indexOf(id); if(i>-1){ state.queue.splice(i,1); state.queue.unshift(id); } }
-    state.current=id; audio.src=urlFor(t.file); audio.play().catch(()=>{}); setNow(t);
+    state.current=id; audio.src=urlFor(t.file); audio.play().catch(e=>toast('Tap play ▶ to allow audio.')); setNow(t);
   }
   function next(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current); const n=i<state.queue.length-1? i+1 : 0; playById(state.queue[n], true); }
   function prev(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current); const p=i>0? i-1 : state.queue.length-1; playById(state.queue[p], true); }
@@ -183,35 +188,47 @@
 
   // ---- tester ----
   const diagFile=$("#diagFile"), diagOut=$("#diagOut"), diagAudio=$("#diagAudio"), btnOpen=$("#btnOpenNew");
-  function Dlog(m){ diagOut.textContent += "\\n"+m; diagOut.scrollTop=diagOut.scrollHeight; }
+  function Dlog(m){ diagOut.textContent += (diagOut.textContent? "\n":"") + m; diagOut.scrollTop=diagOut.scrollHeight; }
   function Dok(m){ Dlog('✅ '+m); } function Derr(m){ Dlog('❌ '+m); }
-  function resolveDiag(){ const file=(diagFile.value||'').trim(); const url=urlFor(file); btnOpen.href=url; return url; }
+  function resolveDiag(){
+    const file=(diagFile.value||'').trim();
+    const url=urlFor(file || 'CRUSH.mp3'); // fallback demo name
+    btnOpen.href=url; return url;
+  }
   $("#btnPlayDiag").onclick=()=>{ const u=resolveDiag(); diagAudio.src=u; diagAudio.play().catch(e=>Derr('Audio play error: '+e.message)); };
   btnOpen.href=resolveDiag();
   $("#btnRunDiag").onclick=async()=>{
     diagOut.textContent='Running tests…'; const url=resolveDiag();
     try{
-      try{ const h=await fetch(url,{method:'HEAD',cache:'no-store'}); Dlog(\`HEAD → \${h.status}\`);}catch{ Dlog('HEAD failed (not fatal)'); }
+      // HEAD is optional—some CDNs disallow; GitHub Pages accepts
+      try{ const h=await fetch(url,{method:'HEAD',cache:'no-store'}); Dlog(`HEAD → ${h.status}`);}catch{ Dlog('HEAD failed (not fatal)'); }
       const r=await fetch(url,{method:'GET',headers:{Range:'bytes=0-1'},cache:'no-store'});
-      Dlog(\`GET Range 0-1 → \${r.status}\`);
+      Dlog(`GET Range 0-1 → ${r.status}`);
       Dlog('Accept-Ranges: '+(r.headers.get('Accept-Ranges')||'(none)'));
       Dlog('Content-Range: '+(r.headers.get('Content-Range')||'(none)'));
       Dlog('Content-Type: '+(r.headers.get('Content-Type')||'(none)'));
-      if(r.status===206) Dok('Byte-range OK (seeking will work).'); else if(r.status===200) Dlog('200 OK (seek may be limited).'); else Derr('Unexpected status.');
-    }catch(e){ Derr('Fetch failed (check path/filename). '+e.message); }
+      if(r.status===206) Dok('Byte-range OK (seeking will work).');
+      else if(r.status===200) Dlog('200 OK (seek may be limited).');
+      else if(r.status===404) Derr('404 Not Found — check file name and path under /audio/.');
+      else Derr('Unexpected status.');
+    }catch(e){ Derr('Fetch failed (wrong path/filename). '+e.message); }
   };
 
-  // ---- local import (client-side only) ----
+  // ---- local import (client-side) ----
   document.getElementById('localFiles').onchange=e=>{
     [...e.target.files].forEach((f,i)=>{
       const id='local_'+Date.now()+'_'+i;
-      tracks.push({id,title:f.name.replace(/\\.[^/.]+$/,''),artist:'Local',album:'Local Files',
+      tracks.push({
+        id, title:f.name.replace(/\.[^/.]+$/,''), artist:'Local', album:'Local Files',
         cover:'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1200&auto=format&fit=crop',
-        file:URL.createObjectURL(f),duration:0});
+        file: URL.createObjectURL(f), duration:0
+      });
     });
     render();
+    toast('Added local files (only playable on this device).');
   };
 
+  // Boot
   render();
 })();
 </script>
