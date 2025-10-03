@@ -1,235 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BuzzMusic</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    :root{--bg:#141414;--card:#1b1b1b;--soft:#232323;--text:#fff;--muted:#bdbdbd;--brand:#1db954;--border:rgba(255,255,255,.08)}
-    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow-x:hidden}
-    .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-    aside{background:linear-gradient(180deg,#0f0f0f,#121212);border-right:1px solid var(--border);padding:1rem .8rem}
-    .brand{font-weight:900;font-size:1.4rem;color:var(--brand)}
-    .nav-item{padding:.55rem .6rem;border-radius:8px;cursor:pointer;color:#eaeaea}
-    .nav-item:hover,.nav-item.active{background:var(--soft)}
-    main{display:flex;flex-direction:column}
-    header{position:sticky;top:0;background:linear-gradient(180deg,rgba(0,0,0,.6),transparent);padding:1rem 1.4rem;backdrop-filter:blur(8px)}
-    .container{width:95%;max-width:1100px;margin:0 auto 110px}
-    .section{margin:18px 0}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .18s}
-    .card:hover{transform:translateY(-2px)}
-    .cover{width:100%;aspect-ratio:1/1;object-fit:cover;background:#111}
-    .card-body{padding:.7rem .8rem 1rem}
-    .title{font-weight:800}
-    .sub{color:#b8b8b8;font-size:.9rem}
-    .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid var(--border);padding:.7rem .8rem;display:grid;grid-template-columns:320px 1fr 320px;gap:10px;align-items:center;z-index:5}
-    .now{display:flex;gap:.6rem;align-items:center;min-width:0}
-    .now img{width:56px;height:56px;border-radius:6px;object-fit:cover}
-    .controls{display:flex;flex-direction:column;align-items:center;gap:.4rem}
-    .buttons{display:flex;gap:.5rem}
-    .btn{background:#1f1f1f;border:1px solid var(--border);color:#fff;border-radius:999px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer}
-    .btn.primary{background:var(--brand);color:#000;width:40px;height:40px;font-weight:900}
-    .progress{width:min(680px,92vw);display:flex;align-items:center;gap:8px}
-    input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;background:#2a2a2a}
-    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--brand);border:none}
-    .pill{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--border);background:#1a1a1a}
-    .diag{background:#171717;border:1px solid var(--border);border-radius:12px;padding:12px}
-    .row{display:grid;grid-template-columns:40px 1fr 120px 70px;gap:.5rem;padding:.55rem .7rem;border-bottom:1px dashed var(--border);align-items:center}
-    .notice{position:fixed;top:10px;right:10px;background:#222;border:1px solid var(--border);padding:.6rem .8rem;border-radius:8px;display:none;white-space:pre-wrap;max-width:80ch}
-    .notice.show{display:block}
-    a.link{color:#8ab4f8;text-decoration:none}
-    @media(max-width:900px){.app{grid-template-columns:1fr}.player{grid-template-columns:1fr}.now{justify-content:center}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BuzzMusic</title>
+<style>
+  body{margin:0;background:#141414;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:900px;margin:32px auto 140px;padding:0 16px}
+  h1{font-size:1.8rem;margin:0 0 12px;color:#1db954}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .card{background:#1b1b1b;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;cursor:pointer}
+  .card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#111}
+  .card .body{padding:10px 12px}
+  .muted{color:#bdbdbd}
+  .tester{background:#171717;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin-top:20px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  input[type=text]{flex:1;min-width:200px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#1f1f1f;color:#fff}
+  button{background:#1db954;color:#000;border:none;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer}
+  pre{background:#0f0f0f;border:1px solid rgba(255,255,255,.12);padding:8px;border-radius:8px;white-space:pre-wrap}
+  .player{position:fixed;left:0;right:0;bottom:0;background:#0d0d0d;border-top:1px solid rgba(255,255,255,.1);display:grid;grid-template-columns:1fr 460px 1fr;gap:8px;align-items:center;padding:8px 12px}
+  .controls{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .btns{display:flex;gap:8px}
+  .btn{width:36px;height:36px;border-radius:999px;display:grid;place-items:center;background:#1f1f1f;border:1px solid rgba(255,255,255,.1);color:#fff;cursor:pointer}
+  .btn.primary{background:#1db954;color:#000;font-weight:900;width:42px;height:42px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;background:#2a2a2a}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#1db954;border:none}
+  .right{display:flex;justify-content:flex-end;gap:10px}
+</style>
 </head>
 <body>
-<div class="app">
-  <aside>
-    <div class="brand">BuzzMusic</div>
-    <div class="nav" style="margin-top:.6rem">
-      <div class="nav-item active" data-view="home">🏠 Home</div>
-      <div class="nav-item" data-view="diagnostics">🧪 Test Stream</div>
-    </div>
-    <div class="nav" style="margin-top:1rem">
-      <label class="nav-item" for="localFiles">➕ Add Local Files
-        <input id="localFiles" type="file" accept="audio/*" multiple style="display:none">
-      </label>
-    </div>
-    <div style="margin-top:1rem;font-size:.85rem;color:#cfcfcf;opacity:.8">
-      Put files here in your repo:<br><code>audio/&lt;your-song.mp3&gt;</code><br><br>
-      URL looks like:<br><code>https://USERNAME.github.io/REPO/audio/Your%20Song.mp3</code>
-    </div>
-  </aside>
+<div class="wrap">
+  <h1>BuzzMusic</h1>
+  <p class="muted">Streaming via HTTPS proxy → <code>97.119.213.15:3001</code></p>
 
-  <main>
-    <header><div class="brand">Browse</div></header>
-    <div class="container">
-      <section class="section">
-        <input id="q" placeholder="Search songs, artists, albums…" style="width:100%;max-width:600px;padding:.75rem 1rem;border-radius:999px;background:#1f1f1f;border:1px solid var(--border);color:#fff;outline:none">
-      </section>
+  <h2>Featured</h2>
+  <div class="grid" id="grid"></div>
 
-      <section class="section"><h2>Featured</h2><div class="grid" id="gridFeatured"></div></section>
-      <section class="section"><h2>All</h2><div class="grid" id="gridAll"></div></section>
-
-      <section class="section" id="secDiag" style="display:none">
-        <h2>Stream Tester</h2>
-        <div class="diag">
-          <div style="display:grid;gap:8px;max-width:760px">
-            <input id="diagFile" placeholder="File under /audio/ (e.g., CRUSH.mp3)" style="padding:.6rem .8rem;background:#1f1f1f;border:1px solid var(--border);border-radius:8px;color:#fff">
-            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-              <button id="btnRunDiag" class="pill">Run Tests</button>
-              <button id="btnPlayDiag" class="pill">Play Stream</button>
-              <a id="btnOpenNew" class="pill" target="_blank">Open in New Tab</a>
-            </div>
-            <pre id="diagOut" style="background:#0f0f0f;border:1px solid var(--border);padding:8px;border-radius:8px;white-space:pre-wrap;min-height:110px"></pre>
-            <audio id="diagAudio" controls style="width:100%"></audio>
-          </div>
-        </div>
-      </section>
+  <div class="tester">
+    <h3>🧪 Stream Tester</h3>
+    <div class="row">
+      <input id="file" type="text" placeholder="Filename (e.g., CRUSH.mp3)" />
+      <button id="run">Run Tests</button>
+      <button id="play">Play</button>
+      <a id="open" target="_blank" style="display:inline-block;background:#2b2b2b;color:#fff;padding:10px 12px;border-radius:8px;text-decoration:none">Open URL</a>
     </div>
-  </main>
+    <pre id="out">Enter a filename and click Run Tests</pre>
+    <audio id="diagAudio" controls style="width:100%"></audio>
+  </div>
 </div>
 
-<!-- Player -->
 <div class="player">
-  <div class="now">
-    <img id="nowCover" src="" alt="cover">
-    <div>
-      <div id="nowTitle" class="title">Nothing playing</div>
-      <div id="nowArtist" class="sub"></div>
-    </div>
-  </div>
+  <div></div>
   <div class="controls">
-    <div class="buttons">
-      <button id="bPrev" class="btn">⏮</button>
-      <button id="bPlay" class="btn primary">▶</button>
-      <button id="bNext" class="btn">⏭</button>
+    <div class="btns">
+      <button id="prev" class="btn">⏮</button>
+      <button id="toggle" class="btn primary">▶</button>
+      <button id="next" class="btn">⏭</button>
     </div>
-    <div class="progress">
-      <span id="tCur" style="width:36px;text-align:center;font-size:.8rem">0:00</span>
+    <div style="display:flex;align-items:center;gap:8px;width:100%">
+      <span id="tcur" style="width:40px;text-align:center">0:00</span>
       <input id="seek" type="range" min="0" max="1000" value="0">
-      <span id="tDur" style="width:36px;text-align:center;font-size:.8rem">0:00</span>
+      <span id="tdur" style="width:40px;text-align:center">0:00</span>
     </div>
   </div>
-  <div style="display:flex;gap:.6rem;justify-content:flex-end">
-    <span class="pill" id="queueCount">Queue: 0</span>
+  <div class="right">
     <input id="vol" type="range" min="0" max="1" step="0.01" value="0.9" style="width:140px">
   </div>
   <audio id="audio"></audio>
 </div>
 
-<div id="notice" class="notice"></div>
-
 <script>
 (() => {
-  // ---- Paths that auto-work on GitHub Pages (both user and project pages) ----
-  const STREAM_BASE = new URL('audio/', location.href).href; // absolute HTTPS to /audio/
-  // Put your actual filenames in the tracks list (they must exist in /audio/)
+  // CHANGE THIS to your Worker HTTPS base:
+  // e.g. "https://your-subdomain.workers.dev/stream/"
+  const PROXY_BASE = "https://YOUR-WORKER-SUBDOMAIN.workers.dev/stream/";
+
+  // Demo tracks (files must exist on your origin at /stream/<file>)
   const tracks = [
-    {id:'t1', title:'CRUSH', artist:'Luxe City', album:'Neon Nights',
-     cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
-     file:'CRUSH.mp3', duration:224},
-    {id:'t2', title:'Sunset Lo-Fi', artist:'Koto Blue', album:'Sketchbook Vol.1',
-     cover:'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
-     file:'Koto Blue - Sunset Lo-Fi.mp3', duration:188}
+    {id:'t1', title:'CRUSH', artist:'Luxe City', cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop', file:'CRUSH.mp3', duration:224},
+    {id:'t2', title:'Another Song', artist:'Artist', cover:'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop', file:'Another.mp3', duration:180}
   ];
 
-  // ---- helpers ----
-  const $ = s => document.querySelector(s);
-  const fmt = s => { s=Math.round(s||0); const m=Math.floor(s/60); const x=(s%60).toString().padStart(2,'0'); return `${m}:${x}`; };
-  const urlFor = f => STREAM_BASE + encodeURIComponent(f);
-  const toast = msg => { const n=$("#notice"); n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'), 4000); };
-
-  // ---- render ----
+  // Simple UI render
+  const grid = document.getElementById('grid');
   function card(t){
     const d=document.createElement('div'); d.className='card';
-    d.innerHTML = `<img class="cover" src="${t.cover}" alt=""><div class="card-body"><div class="title">${t.title}</div><div class="sub">${t.artist} • ${t.album}</div></div>`;
-    d.onclick = ()=> playById(t.id, true);
+    d.innerHTML = \`<img src="\${t.cover}"><div class="body"><div><b>\${t.title}</b></div><div class="muted">\${t.artist}</div></div>\`;
+    d.onclick=()=> playFile(t.file);
     return d;
   }
-  function render(filter=''){
-    const f=x => (`${x.title} ${x.artist} ${x.album}`).toLowerCase().includes(filter);
-    const fea = tracks.slice(0,3).filter(f);
-    const all = tracks.filter(f);
-    const gF=$("#gridFeatured"); gF.innerHTML=""; fea.forEach(t=>gF.appendChild(card(t)));
-    const gA=$("#gridAll"); gA.innerHTML=""; all.forEach(t=>gA.appendChild(card(t)));
-  }
+  tracks.forEach(t => grid.appendChild(card(t)));
 
-  // ---- player ----
-  const audio=$("#audio"); const nowCover=$("#nowCover"), nowTitle=$("#nowTitle"), nowArtist=$("#nowArtist");
-  const bPlay=$("#bPlay"), bPrev=$("#bPrev"), bNext=$("#bNext"), seek=$("#seek"), tCur=$("#tCur"), tDur=$("#tDur"), vol=$("#vol"), qCount=$("#queueCount");
-  const state = { queue:[], current:null };
-
+  // Player
+  const audio = document.getElementById('audio');
+  const toggle = document.getElementById('toggle');
+  const seek = document.getElementById('seek'), tcur=document.getElementById('tcur'), tdur=document.getElementById('tdur'), vol=document.getElementById('vol');
   vol.oninput=()=> audio.volume=+vol.value;
-  bPlay.onclick=()=>{ if(audio.paused){ audio.play().catch(()=>{}); bPlay.textContent='⏸'; } else { audio.pause(); bPlay.textContent='▶'; } };
-  bPrev.onclick=()=> prev(); bNext.onclick=()=> next();
-  seek.oninput=()=>{ if(audio.duration){ audio.currentTime=(seek.value/1000)*audio.duration; } };
-  audio.ontimeupdate=()=>{ const d=audio.duration||0,c=audio.currentTime||0; tCur.textContent=fmt(c); tDur.textContent=fmt(d); if(d) seek.value=Math.floor(1000*c/d); };
-  audio.onended=()=> next();
+  toggle.onclick=()=>{ if(audio.paused){ audio.play().catch(()=>{}); toggle.textContent='⏸'; } else { audio.pause(); toggle.textContent='▶'; } };
+  audio.ontimeupdate=()=>{ const d=audio.duration||0,c=audio.currentTime||0; tcur.textContent=fmt(c); tdur.textContent=fmt(d); if(d) seek.value=Math.floor(1000*c/d); };
+  seek.oninput=()=>{ if(audio.duration){ audio.currentTime = (seek.value/1000)*audio.duration; } };
 
-  function setNow(t){ nowCover.src=t.cover; nowTitle.textContent=t.title; nowArtist.textContent=`${t.artist} • ${t.album}`; bPlay.textContent='⏸'; }
-  function addToQueue(id){ if(!state.queue.includes(id)) state.queue.push(id); qCount.textContent=`Queue: ${state.queue.length}`; }
-  function playById(id, bump=false){
-    const t=tracks.find(x=>x.id===id); if(!t) return;
-    addToQueue(id);
-    if(bump){ const i=state.queue.indexOf(id); if(i>-1){ state.queue.splice(i,1); state.queue.unshift(id); } }
-    state.current=id; audio.src=urlFor(t.file); audio.play().catch(e=>toast('Tap play ▶ to allow audio.')); setNow(t);
-  }
-  function next(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current); const n=i<state.queue.length-1? i+1 : 0; playById(state.queue[n], true); }
-  function prev(){ if(!state.queue.length) return; const i=state.queue.indexOf(state.current); const p=i>0? i-1 : state.queue.length-1; playById(state.queue[p], true); }
+  function fmt(s){ s=Math.round(s||0); const m=Math.floor(s/60); const x=(s%60).toString().padStart(2,'0'); return \`\${m}:\${x}\`; }
+  function urlFor(file){ return PROXY_BASE + encodeURIComponent(file); }
+  function playFile(file){ audio.src=urlFor(file); audio.play().catch(()=>{}); toggle.textContent='⏸'; }
 
-  // ---- search & nav ----
-  $("#q").oninput=e=>render(e.target.value.trim().toLowerCase());
-  document.querySelectorAll(".nav-item[data-view]").forEach(i=>i.onclick=()=>{
-    document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active")); i.classList.add("active");
-    const v=i.dataset.view; $("#secDiag").style.display = v==='diagnostics' ? '' : 'none';
-  });
+  // Tester
+  const file = document.getElementById('file');
+  const run  = document.getElementById('run');
+  const play = document.getElementById('play');
+  const open = document.getElementById('open');
+  const out  = document.getElementById('out');
+  const diag = document.getElementById('diagAudio');
 
-  // ---- tester ----
-  const diagFile=$("#diagFile"), diagOut=$("#diagOut"), diagAudio=$("#diagAudio"), btnOpen=$("#btnOpenNew");
-  function Dlog(m){ diagOut.textContent += (diagOut.textContent? "\n":"") + m; diagOut.scrollTop=diagOut.scrollHeight; }
-  function Dok(m){ Dlog('✅ '+m); } function Derr(m){ Dlog('❌ '+m); }
-  function resolveDiag(){
-    const file=(diagFile.value||'').trim();
-    const url=urlFor(file || 'CRUSH.mp3'); // fallback demo name
-    btnOpen.href=url; return url;
-  }
-  $("#btnPlayDiag").onclick=()=>{ const u=resolveDiag(); diagAudio.src=u; diagAudio.play().catch(e=>Derr('Audio play error: '+e.message)); };
-  btnOpen.href=resolveDiag();
-  $("#btnRunDiag").onclick=async()=>{
-    diagOut.textContent='Running tests…'; const url=resolveDiag();
+  function resolve(){ const f=(file.value||'CRUSH.mp3').trim(); const u=urlFor(f); open.href=u; return u; }
+  play.onclick=()=>{ const u=resolve(); diag.src=u; diag.play().catch(e=>log('❌ Audio play error: '+e.message)); };
+  open.href = resolve();
+  run.onclick=async ()=>{
+    out.textContent='Running…';
+    const u=resolve();
     try{
-      // HEAD is optional—some CDNs disallow; GitHub Pages accepts
-      try{ const h=await fetch(url,{method:'HEAD',cache:'no-store'}); Dlog(`HEAD → ${h.status}`);}catch{ Dlog('HEAD failed (not fatal)'); }
-      const r=await fetch(url,{method:'GET',headers:{Range:'bytes=0-1'},cache:'no-store'});
-      Dlog(`GET Range 0-1 → ${r.status}`);
-      Dlog('Accept-Ranges: '+(r.headers.get('Accept-Ranges')||'(none)'));
-      Dlog('Content-Range: '+(r.headers.get('Content-Range')||'(none)'));
-      Dlog('Content-Type: '+(r.headers.get('Content-Type')||'(none)'));
-      if(r.status===206) Dok('Byte-range OK (seeking will work).');
-      else if(r.status===200) Dlog('200 OK (seek may be limited).');
-      else if(r.status===404) Derr('404 Not Found — check file name and path under /audio/.');
-      else Derr('Unexpected status.');
-    }catch(e){ Derr('Fetch failed (wrong path/filename). '+e.message); }
+      try{ const h=await fetch(u,{method:'HEAD',cache:'no-store'}); log(\`HEAD → \${h.status}\`);}catch{ log('HEAD failed (not fatal)'); }
+      const r=await fetch(u,{method:'GET',headers:{Range:'bytes=0-1'},cache:'no-store'});
+      log(\`GET Range 0-1 → \${r.status}\`);
+      log('Accept-Ranges: '+(r.headers.get('Accept-Ranges')||'(none)'));
+      log('Content-Range: '+(r.headers.get('Content-Range')||'(none)'));
+      log('Content-Type: '+(r.headers.get('Content-Type')||'(none)'));
+      if(r.status===206) log('✅ Byte-range OK (seeking works).');
+      else if(r.status===200) log('ℹ️ 200 OK (seek may be limited).');
+      else if(r.status===404) log('❌ 404 (check filename).');
+      else log('⚠️ Unexpected status.');
+    }catch(e){ log('❌ Fetch failed: '+e.message); }
   };
+  function log(m){ out.textContent += (out.textContent? "\n": "") + m; out.scrollTop=out.scrollHeight; }
 
-  // ---- local import (client-side) ----
-  document.getElementById('localFiles').onchange=e=>{
-    [...e.target.files].forEach((f,i)=>{
-      const id='local_'+Date.now()+'_'+i;
-      tracks.push({
-        id, title:f.name.replace(/\.[^/.]+$/,''), artist:'Local', album:'Local Files',
-        cover:'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1200&auto=format&fit=crop',
-        file: URL.createObjectURL(f), duration:0
-      });
-    });
-    render();
-    toast('Added local files (only playable on this device).');
-  };
-
-  // Boot
-  render();
+  // Start with CRUSH.mp3
+  file.value = 'CRUSH.mp3';
 })();
 </script>
 </body>
