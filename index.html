@@ -604,7 +604,27 @@
       document.getElementById('btnRunDiag').onclick = async ()=>{
         out.textContent = 'Running tests…';
         const url = resolve();
+
+        // --- Environment prechecks ---
+        if (location.protocol === 'https:' && url.startsWith('http:')) {
+          err('Mixed content: this page is HTTPS but the stream is HTTP. The browser will block it.');
+          log('Fix: serve the stream over HTTPS, or host this page on HTTP/same-origin so the schemes match.');
+          return;
+        }
+        if (location.protocol === 'file:') {
+          log('You are running from file://. Many browsers restrict fetch/audio from file origins.');
+          log('Fix: serve this HTML via a local server (e.g., `npx serve` or `python3 -m http.server`) and open http://localhost:PORT.');
+        }
+
         try{
+          // Quick reachability HEAD (some servers may not allow HEAD; ignore failures here)
+          try {
+            const head = await fetch(url, { method:'HEAD', cache:'no-store' });
+            log(`HEAD → status ${head.status}`);
+          } catch (e) {
+            log('HEAD request failed (not fatal)');
+          }
+
           const t0 = performance.now();
           const r = await fetch(url, { method:'GET', headers:{ 'Range':'bytes=0-1' }, cache:'no-store' });
           const t1 = performance.now();
@@ -617,7 +637,7 @@
           log(`Accept-Ranges: ${ar || '(none)'}`);
           log(`Content-Range: ${cr || '(none)'}`);
           if(r.status===206){ ok('Partial content supported (byte-range). Seeking should work.'); }
-          else if(r.status===200){ log('ℹ️ Server returned 200. May still play, but byte-range seeking might be limited.'); }
+          else if(r.status===200){ log('ℹ️ Server returned 200. May still play, but seeking may be limited.'); }
           else { err('Unexpected status code.'); }
 
           const t2 = performance.now();
@@ -630,6 +650,21 @@
             const target = Math.min(10, (a.duration||60)/2);
             a.currentTime = target; // trigger seek
           };
+          a.onseeking = ()=>{ log('🔎 audio: seeking…'); };
+          a.onseeked  = ()=>{ ok('audio: seeked successfully'); };
+          a.onerror   = ()=>{ err('audio error: '+ (a.error?.message||a.error?.code||'unknown')); };
+
+        }catch(e){
+          // Common causes: CORS, DNS/port blocked, self-signed TLS from upgrade, wrong path
+          err('Fetch failed.');
+          log('Possible causes:');
+          log(' • CORS: Add Access-Control-Allow-Origin:* on the stream responses (or use same-origin).');
+          log(' • Mixed content: HTTPS page → HTTP stream (use HTTPS or same-origin).');
+          log(' • Firewall/NAT: Port closed or not reachable from this device.');
+          log(' • Wrong URL/path: Open the URL directly in a new tab to confirm.');
+          log('Raw error: '+ e.message);
+        }
+      };
           a.onseeking = ()=>{ log('🔎 audio: seeking…'); };
           a.onseeked  = ()=>{ ok('audio: seeked successfully'); };
           a.onerror   = ()=>{ err('audio error: '+ (a.error?.message||a.error?.code||'unknown')); };
