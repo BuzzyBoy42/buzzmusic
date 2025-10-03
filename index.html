@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>BuzzMusic – Proxy Test Player</title>
+<title>BuzzMusic – Proxy Stream Tester</title>
 <style>
   body{margin:0;background:#141414;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   .wrap{max-width:900px;margin:40px auto 140px;padding:0 16px}
@@ -20,67 +20,70 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>BuzzMusic – Proxy Test Player</h1>
+  <h1>BuzzMusic – Proxy Stream Tester</h1>
   <p class="muted">Streams through your Cloudflare Worker (HTTPS) → your home server (HTTP).</p>
 
   <div class="row">
     <input id="file" type="text" placeholder="Filename (e.g., CRUSH.mp3)"/>
+    <button id="probe">Probe</button>
     <button id="play">Play</button>
-    <button id="check" class="secondary">Run Range Check</button>
     <a id="open" class="btn" target="_blank" rel="noreferrer">Open Direct</a>
   </div>
 
   <div class="panel">
+    <h3>Audio</h3>
     <audio id="audio" controls crossorigin="anonymous"></audio>
   </div>
 
   <div class="panel">
     <h3>Diagnostics</h3>
-    <pre id="out">Enter a filename and click “Run Range Check”.</pre>
+    <pre id="out">Enter a filename and click “Probe”.</pre>
   </div>
 </div>
 
 <script>
 (() => {
-  // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  // CHANGE THIS to your Worker base (MUST end with /audio/):
+  // >>> SET THIS to your Worker (MUST end with /audio/)
   const PROXY_BASE = "https://YOUR-WORKER-SUBDOMAIN.workers.dev/audio/";
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  // Probe endpoint is same host with /_probe
+  const PROBE_BASE = PROXY_BASE.replace(/\/audio\/?$/, "/_probe?file=");
 
   const $ = s => document.querySelector(s);
   const file = $('#file'), audio = $('#audio'), out = $('#out'), open = $('#open');
 
-  file.value = 'CRUSH.mp3'; // default demo name
+  file.value = 'CRUSH.mp3'; // default name
 
-  function urlFor(name){ return PROXY_BASE + encodeURIComponent(name.trim()); }
+  function urlFor(name){ return PROXY_BASE + encodeURIComponent((name||'').trim()); }
+  function probeUrl(name){ return PROBE_BASE + encodeURIComponent((name||'').trim()); }
   function log(m){ out.textContent += (out.textContent ? "\n" : "") + m; out.scrollTop = out.scrollHeight; }
+  function reset(){ out.textContent = ''; }
 
-  $('#play').onclick = () => {
-    const u = urlFor(file.value || 'CRUSH.mp3');
-    open.href = u;
-    audio.src = u;
-    audio.play().catch(e => log('play() blocked: ' + e.message));
+  $('#probe').onclick = async () => {
+    reset();
+    const name = file.value || 'CRUSH.mp3';
+    open.href = urlFor(name);
+    log('Probing origin via Worker…');
+    try {
+      const r = await fetch(probeUrl(name), { cache:'no-store' });
+      const j = await r.json();
+      log(JSON.stringify(j, null, 2));
+      if (!j.ok) {
+        log('❌ Not playable yet. Fix origin path/filename or connectivity.');
+      } else if (j.status === 206 || j.status === 200) {
+        log('✅ Origin looks good. Try Play.');
+      } else {
+        log('⚠️ Unexpected status; the player may still fail.');
+      }
+    } catch (e) {
+      log('❌ Probe failed: ' + e.message);
+    }
   };
 
-  $('#check').onclick = async () => {
-    out.textContent = 'Running range check…';
-    const u = urlFor(file.value || 'CRUSH.mp3');
-    open.href = u;
-    try {
-      // HEAD (some origins may not support; not fatal)
-      try { const h = await fetch(u, { method:'HEAD', cache:'no-store' }); log('HEAD → ' + h.status); } catch { log('HEAD failed (not fatal)'); }
-      const r = await fetch(u, { method:'GET', headers:{ Range:'bytes=0-1' }, cache:'no-store' });
-      log('GET Range 0-1 → ' + r.status);
-      log('Accept-Ranges: ' + (r.headers.get('Accept-Ranges') || '(none)'));
-      log('Content-Range: ' + (r.headers.get('Content-Range') || '(none)'));
-      log('Content-Type:  ' + (r.headers.get('Content-Type')  || '(none)'));
-      if (r.status === 206) log('✅ Byte-range OK (seeking works).');
-      else if (r.status === 200) log('ℹ️ 200 OK (server didn’t honor Range; seek may be limited).');
-      else if (r.status === 404) log('❌ 404 Not Found — check filename at origin: /stream/<file>');
-      else log('⚠️ Unexpected status.');
-    } catch (e) {
-      log('❌ Fetch failed: ' + e.message);
-    }
+  $('#play').onclick = () => {
+    const name = file.value || 'CRUSH.mp3';
+    const u = urlFor(name); open.href = u;
+    audio.src = u;
+    audio.play().catch(e => log('play() rejected: ' + e.message));
   };
 })();
 </script>
