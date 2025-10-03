@@ -1,40 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- NOTE: Removed the CSP upgrade-insecure-requests meta to avoid forcing HTTP→HTTPS on streams. -->
+  <!-- Intentionally no upgrade-insecure-requests: it can break http streams under https. -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BuzzMusic</title>
   <style>
-    /* Reset + basics */
     * { margin:0; padding:0; box-sizing:border-box; }
     :root{
       --bg:#141414; --card:#1b1b1b; --soft:#232323; --text:#fff; --muted:#bdbdbd;
-      --brand:#1db954; /* Spotify-ish green */
-      --accent:#e50914; /* legacy red for splash */
-      --border: rgba(255,255,255,.08);
+      --brand:#1db954; --border: rgba(255,255,255,.08);
     }
     body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; overflow-x:hidden; }
 
-    /* downtime banner */
     #downBanner { display:none; position:fixed; top:0; left:0; width:100%; background:#e50914; color:#fff; text-align:center; padding:.7rem; font-weight:700; z-index:10001; }
     body.music-down { padding-top:2.8rem; }
 
-    /* Splash */
-    #splash { position:fixed; inset:0; background:#000; display:flex; align-items:center; justify-content:center; z-index:10000; overflow:hidden; animation:splashFade 2.6s ease-out forwards; }
+    #splash { position:fixed; inset:0; background:#000; display:flex; align-items:center; justify-content:center; z-index:10000; overflow:hidden; animation:splashFade 2.2s ease-out forwards; }
     .lines-container { position:absolute; inset:0; display:flex; }
-    .lines-container .line { flex:1; height:0; background:#fff; animation:grow .6s ease-out forwards; }
-    .lines-container .line:nth-child(n){ animation-delay:calc((var(--i)*.035s)); }
-    .splash-logo { position:relative; font-size:3rem; font-weight:800; letter-spacing:.4px; color:#fff; opacity:0; animation:logoFade .5s ease-out 1.5s forwards; z-index:2; }
+    .lines-container .line { flex:1; height:0; background:#fff; animation:grow .55s ease-out forwards; }
+    .lines-container .line:nth-child(n){ animation-delay:calc((var(--i)*.03s)); }
+    .splash-logo { position:relative; font-size:2.6rem; font-weight:800; letter-spacing:.3px; color:#fff; opacity:0; animation:logoFade .45s ease-out 1.35s forwards; z-index:2; }
     @keyframes grow { to{height:100vh;} }
-    @keyframes logoFade { from {opacity:0; transform:scale(.85)} to {opacity:1; transform:scale(1)} }
+    @keyframes logoFade { from {opacity:0; transform:scale(.9)} to {opacity:1; transform:scale(1)} }
     @keyframes splashFade { 0%{opacity:1;} 80%{opacity:1;} 100%{opacity:0; visibility:hidden;} }
 
-    /* App shell */
     .app { display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
     aside { background:linear-gradient(180deg,#0f0f0f,#121212); border-right:1px solid var(--border); padding:1rem .8rem; position:sticky; top:0; height:100vh; }
     header.topbar { position:sticky; top:0; z-index:5; background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0)); padding:1rem 2rem; display:flex; align-items:center; gap:1rem; backdrop-filter:saturate(140%) blur(8px); }
-
     .brand { font-weight:900; font-size:1.5rem; letter-spacing:.3px; color:var(--brand); }
     .nav-group { margin:.4rem 0 1rem; }
     .nav-title { font-size:.8rem; color:#9aa0a6; text-transform:uppercase; margin:.8rem .5rem; letter-spacing:.08em; }
@@ -45,8 +38,7 @@
     main { display:flex; flex-direction:column; }
     .container { width:95%; max-width:1200px; margin:0 auto 120px; }
 
-    /* Hero slider */
-    .hero { position:relative; width:100%; height:48vh; max-height:520px; margin:10px auto 18px; overflow:hidden; border-radius:14px; background:#090909; }
+    .hero { position:relative; width:100%; height:46vh; max-height:520px; margin:10px auto 18px; overflow:hidden; border-radius:14px; background:#090909; }
     .hero-slide { position:absolute; inset:0; background-position:center; background-size:cover; opacity:0; transition:opacity 1s ease-in-out; }
     .hero-slide.active { opacity:1; }
     .hero-overlay { position:absolute; inset:auto 0 0 0; padding:2rem; background:linear-gradient(180deg,rgba(0,0,0,0) 0%, rgba(0,0,0,.75) 60%, rgba(0,0,0,.9) 100%); }
@@ -58,15 +50,12 @@
     .hero-nav { position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; pointer-events:none; }
     .hero-nav span { pointer-events:auto; margin:0 .8rem; font-size:2rem; padding:.3rem .6rem; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--border); cursor:pointer; }
 
-    /* Search */
     .searchbar { display:flex; gap:.6rem; align-items:center; justify-content:center; margin:10px 0 18px; }
     .searchbar input { width:min(640px,92%); padding:.8rem 1rem; border-radius:999px; background:#1e1e1e; color:#fff; border:1px solid var(--border); outline:none; }
 
-    /* Sections */
     .section { margin:22px 0; }
     .section h2 { font-size:1.25rem; margin:0 0 10px 6px; font-weight:800; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; }
-
     .card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; cursor:pointer; transition:transform .22s ease, background .22s ease; }
     .card:hover { transform:translateY(-3px); background:#202020; }
     .cover { width:100%; aspect-ratio:1/1; object-fit:cover; background:#111; }
@@ -75,7 +64,6 @@
     .card-sub { color:#b7b7b7; font-size:.85rem; }
     .explicit { font-size:.65rem; background:#c0392b; color:#fff; padding:.05rem .3rem; border-radius:3px; margin-left:.3rem; }
 
-    /* Modal */
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:10002; align-items:center; justify-content:center; padding:1rem; }
     .modal-content { width:min(900px,94%); background:#181818; border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:scaleIn .22s ease; }
     @keyframes scaleIn { from{opacity:0; transform:scale(.96)} to{opacity:1; transform:scale(1)} }
@@ -88,7 +76,6 @@
     .row { display:grid; grid-template-columns:40px 1fr 120px 80px; gap:.5rem; align-items:center; padding:.6rem 1rem; border-bottom:1px dashed var(--border); }
     .row .num { text-align:center; color:#9aa0a6; }
 
-    /* Player */
     .player { position:fixed; left:0; right:0; bottom:0; background:#0d0d0d; border-top:1px solid var(--border); padding:.6rem .8rem; display:grid; grid-template-columns:320px 1fr 320px; gap:10px; align-items:center; z-index:10001; }
     .now { display:flex; align-items:center; gap:.7rem; min-width:0; }
     .now img { width:56px; height:56px; border-radius:6px; object-fit:cover; }
@@ -108,9 +95,10 @@
     .right { display:flex; align-items:center; justify-content:flex-end; gap:.6rem; }
     .pill { padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:#1a1a1a; font-size:.8rem; }
 
-    /* Liquid glass theme */
     body.liquid-glass .card, body.liquid-glass .modal-content, body.liquid-glass .player,
-    body.liquid-glass aside, body.liquid-glass .hero, body.liquid-glass .searchbar input { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); backdrop-filter: blur(14px); }
+    body.liquid-glass aside, body.liquid-glass .hero, body.liquid-glass .searchbar input {
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); backdrop-filter: blur(14px);
+    }
     body.liquid-glass .player { background:rgba(0,0,0,.45); }
 
     @media (max-width: 900px){
@@ -121,19 +109,20 @@
       .player { grid-template-columns:1fr; gap:.6rem; }
       .right { justify-content:center; }
     }
+
+    .notice { position:fixed; top:10px; right:10px; background:#222; border:1px solid var(--border); padding:.6rem .8rem; border-radius:8px; color:#fff; z-index:10003; max-width:320px; font-size:.9rem; display:none; }
+    .notice.show { display:block; }
   </style>
 </head>
 <body>
   <div id="downBanner">🚨 Music streaming is temporarily down. 🚨</div>
 
-  <!-- Splash -->
   <div id="splash">
     <div class="lines-container"></div>
     <div class="splash-logo">BuzzMusic</div>
   </div>
 
   <div class="app">
-    <!-- Sidebar -->
     <aside>
       <div class="brand">BuzzMusic</div>
       <div class="nav-group">
@@ -146,13 +135,9 @@
       </div>
       <div class="nav-group">
         <div class="nav-title">Theme</div>
-        <div class="nav-item">🧪
-          <span style="margin-left:.2rem">Liquid Glass</span>
-          <span style="margin-left:auto">
-            <label class="switch">
-              <input id="themeToggle" type="checkbox" />
-            </label>
-          </span>
+        <div class="nav-item">
+          🧪 <span style="margin-left:.2rem">Liquid Glass</span>
+          <span style="margin-left:auto"><input id="themeToggle" type="checkbox" /></span>
         </div>
       </div>
       <div class="nav-group">
@@ -163,7 +148,6 @@
       </div>
     </aside>
 
-    <!-- Main -->
     <main>
       <header class="topbar">
         <div class="brand">Browse</div>
@@ -173,18 +157,14 @@
       </header>
 
       <div class="container">
-        <!-- Hero -->
         <section class="hero" id="hero">
           <div class="hero-nav"><span id="prevHero">❮</span><span id="nextHero">❯</span></div>
         </section>
-
-        <!-- Dynamic Sections -->
         <div id="sections"></div>
       </div>
     </main>
   </div>
 
-  <!-- Track / Album Modal -->
   <div class="modal" id="modal">
     <div class="modal-content">
       <span class="close-x" id="closeModal">✕</span>
@@ -204,7 +184,6 @@
     </div>
   </div>
 
-  <!-- Player -->
   <div class="player" id="player">
     <div class="now">
       <img id="nowCover" alt="cover" src="" />
@@ -234,62 +213,64 @@
     <audio id="audio"></audio>
   </div>
 
+  <div class="notice" id="notice"></div>
+
   <script>
-    /***************************
-     * ACCESS + CONFIG
-     ***************************/
-    const ACCESS_KEY = "buzzflix2025allow"; // access gate (keep or change)
-    if (localStorage.getItem("buzzflix_ok") !== "1") {
-      const entered = prompt("Enter Access Key:");
-      if (entered !== ACCESS_KEY) {
-        document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:2em;'>Access Denied</h1>";
-        throw new Error("Invalid access key");
-      }
-      localStorage.setItem("buzzflix_ok","1");
+  document.addEventListener('DOMContentLoaded', () => {
+    /* ---------------- CONFIG (edit these) ---------------- */
+    const USE_SAME_ORIGIN = true;         // true = use "/stream/" on the same origin (recommended)
+    const STREAM_IP   = "97.119.213.15";  // only used if USE_SAME_ORIGIN=false
+    const STREAM_PORT = 3001;             // only used if USE_SAME_ORIGIN=false
+    const STREAM_BASE = USE_SAME_ORIGIN ? "/stream/" : `http://${STREAM_IP}:${STREAM_PORT}/stream/`;
+    const musicDown   = false;            // flip to true to simulate downtime
+    /* ---------------------------------------------------- */
+
+    const N = (sel) => document.querySelector(sel);
+    const notice = N('#notice');
+    function showNotice(msg, persist=false) {
+      notice.textContent = msg;
+      notice.classList.add('show');
+      if (!persist) setTimeout(() => notice.classList.remove('show'), 5000);
     }
 
-    // ▶ Stream base configuration
-    // Recommended: host this HTML from the SAME origin as your audio server and leave USE_SAME_ORIGIN=true.
-    const STREAM_IP   = "97.119.213.15";   // fallback IP/domain if not same-origin
-    const STREAM_PORT = 3001;
-    const USE_SAME_ORIGIN = true;           // set to false if your audio lives on another host:port
+    // CSP/mixed-content helper
+    if (location.protocol === 'https:' && STREAM_BASE.startsWith('http://')) {
+      showNotice('This page is HTTPS but the stream is HTTP. Browser will block it. Use same-origin or HTTPS stream.', true);
+    }
+    if (location.protocol === 'file:') {
+      showNotice('You opened index.html via file://. Please use a local server (http), e.g. `node server.js` below.', true);
+    }
 
-    const STREAM_BASE = USE_SAME_ORIGIN
-      ? "/stream/"  // same-origin avoids HTTPS/mixed-content issues
-      : `${window.location.protocol}//${STREAM_IP}:${STREAM_PORT}/stream/`;
+    // Splash
+    (function initSplash(){
+      const colors = ["#1db954","#22c55e","#10b981","#34d399","#86efac","#a7f3d0","#6ee7b7","#059669","#16a34a","#2dd4bf","#14b8a6"];
+      const lc = document.querySelector('.lines-container');
+      for(let i=0;i<30;i++){ const d=document.createElement('div'); d.className='line'; d.style.setProperty('--i', i); d.style.background=colors[Math.floor(Math.random()*colors.length)]; lc.appendChild(d); }
+      document.getElementById('splash').addEventListener('animationend', e=>{ if(e.animationName==='splashFade'){ document.getElementById('splash').remove(); } });
+    })();
 
-    const musicDown   = false;
+    if (musicDown) {
+      N('#downBanner').style.display='block';
+      document.body.classList.add('music-down');
+    }
 
-    /***************************
-     * THEME + SPLASH
-     ***************************/
-    const themeToggle = document.getElementById('themeToggle');
+    // Theme
+    const themeToggle = N('#themeToggle');
     const savedTheme = localStorage.getItem('bfmTheme') || 'default';
     document.body.classList.toggle('liquid-glass', savedTheme === 'liquid');
     themeToggle.checked = savedTheme === 'liquid';
     themeToggle.addEventListener('change', ()=>{
-      const on = themeToggle.checked; document.body.classList.toggle('liquid-glass', on); localStorage.setItem('bfmTheme', on?'liquid':'default');
+      const on = themeToggle.checked;
+      document.body.classList.toggle('liquid-glass', on);
+      localStorage.setItem('bfmTheme', on?'liquid':'default');
     });
 
-    function initSplash(){
-      const colors = ["#1db954","#22c55e","#10b981","#34d399","#86efac", "#a7f3d0", "#6ee7b7", "#059669", "#16a34a", "#065f46", "#2dd4bf", "#14b8a6"]; 
-      const lc = document.querySelector('.lines-container');
-      for(let i=0;i<36;i++){ const d=document.createElement('div'); d.className='line'; d.style.setProperty('--i', i); d.style.background = colors[Math.floor(Math.random()*colors.length)]; lc.appendChild(d); }
-      document.getElementById('splash').addEventListener('animationend', e=>{ if(e.animationName==='splashFade'){ document.getElementById('splash').remove(); } });
-    }
-    initSplash();
-
-    if(musicDown){ document.getElementById('downBanner').style.display='block'; document.body.classList.add('music-down'); }
-
-    /***************************
-     * DATA MODEL
-     ***************************/
-    // Replace files with your own (they must exist under STREAM_BASE). Spaces are URL-encoded automatically.
+    // Tracks (replace files with your own under /stream/)
     const tracks = [
       { id:'t1', title:'CRUSH', artist:'Luxe City', album:'Neon Nights',
         cover:'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1200&auto=format&fit=crop',
         file:'CRUSH.mp3', duration:224, genres:['synthwave','featured','chill'] },
-      { id:'t2', title:'Sunset Lo‑Fi', artist:'Koto Blue', album:'Sketchbook Vol.1',
+      { id:'t2', title:'Sunset Lo-Fi', artist:'Koto Blue', album:'Sketchbook Vol.1',
         cover:'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
         file:'Koto Blue - Sunset Lo-Fi.mp3', duration:188, genres:['lofi','chill','featured'] },
       { id:'t3', title:'Hold Tight', artist:'Glass Harbor', album:'Run Wild',
@@ -309,13 +290,17 @@
         file:'Octane 90 - Pit Stop.mp3', duration:185, genres:['rock'] },
       { id:'t8', title:'Morning Pages', artist:'Eden Grey', album:'Focus Flow',
         cover:'https://images.unsplash.com/photo-1476231682828-37e571bc172f?q=80&w=1200&auto=format&fit=crop',
-        file:'Eden Grey - Morning Pages.mp3', duration:240, genres:['instrumental','lofi'] }
+        file:'Eden Grey - Morning Pages.mp3', duration:240, genres:['instrumental','lofi'] },
+      // Built-in test tone (plays everywhere, no server needed)
+      { id:'tone', title:'Test Tone 1kHz', artist:'BuzzMusic', album:'Diagnostics',
+        cover:'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200&auto=format&fit=crop',
+        file:'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAABJYWFhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAAAP//AAAA',
+        duration:1, genres:['featured','instrumental'] }
     ];
-
     const sectionsConfig = [
       { key:'featured', title:'Featured' },
       { key:'chill', title:'Chill' },
-      { key:'lofi', title:'Lo‑Fi & Study' },
+      { key:'lofi', title:'Lo-Fi & Study' },
       { key:'pop', title:'Pop' },
       { key:'rock', title:'Rock' },
       { key:'country', title:'Country' },
@@ -324,24 +309,21 @@
       { key:'holiday', title:'Holiday' }
     ];
 
-    /***************************
-     * STATE
-     ***************************/
+    // State
     const state = {
-      current: null,           // { id, idx }
-      queue: [],               // array of track ids
-      repeat: 'off',           // off | one | all
-      shuffle: false,
+      current: null, queue: [], repeat:'off', shuffle:false,
       library: new Set(JSON.parse(localStorage.getItem('bfmLibrary')||'[]')),
       playlists: JSON.parse(localStorage.getItem('bfmPlaylists')||'{}'),
     };
+    const sections = N('#sections');
+    const audio = N('#audio');
+    const nowCover=N('#nowCover'), nowTitle=N('#nowTitle'), nowArtist=N('#nowArtist');
+    const btnPlay=N('#btnPlay'), btnPrev=N('#btnPrev'), btnNext=N('#btnNext');
+    const btnShuffle=N('#btnShuffle'), btnRepeat=N('#btnRepeat');
+    const seek=N('#seek'), vol=N('#volume'); const curTime=N('#curTime'), durTime=N('#durTime'); const queueCount=N('#queueCount');
 
-    const el = (sel) => document.querySelector(sel);
-
-    /***************************
-     * HERO SLIDER
-     ***************************/
-    const hero = el('#hero');
+    // Hero
+    const hero = N('#hero');
     const featured = tracks.filter(t=>t.genres?.includes('featured'));
     let heroIdx = 0, heroTimer;
     function buildHero(){
@@ -360,10 +342,9 @@
       });
     }
     function showHero(i){ hero.querySelectorAll('.hero-slide').forEach((s,idx)=>s.classList.toggle('active', idx===i)); }
-    function startHero(){ clearInterval(heroTimer); heroTimer=setInterval(()=>{ heroIdx=(heroIdx+1)%featured.length; showHero(heroIdx); }, 6000); }
-    el('#prevHero').onclick=()=>{ heroIdx=(heroIdx-1+featured.length)%featured.length; showHero(heroIdx); startHero(); };
-    el('#nextHero').onclick=()=>{ heroIdx=(heroIdx+1)%featured.length; showHero(heroIdx); startHero(); };
-
+    function startHero(){ clearInterval(heroTimer); if(featured.length) heroTimer=setInterval(()=>{ heroIdx=(heroIdx+1)%featured.length; showHero(heroIdx); }, 6000); }
+    N('#prevHero').onclick=()=>{ heroIdx=(heroIdx-1+featured.length)%featured.length; showHero(heroIdx); startHero(); };
+    N('#nextHero').onclick=()=>{ heroIdx=(heroIdx+1)%featured.length; showHero(heroIdx); startHero(); };
     hero.addEventListener('click', (e)=>{
       const playId = e.target.closest('button')?.dataset?.id;
       const qId = e.target.closest('button')?.dataset?.queue;
@@ -371,10 +352,7 @@
       if(qId){ addToQueue(qId); }
     });
 
-    /***************************
-     * SECTIONS + CARDS
-     ***************************/
-    const sections = el('#sections');
+    // Cards & Sections
     function createCard(t){
       const c=document.createElement('div'); c.className='card'; c.dataset.id=t.id;
       c.innerHTML=`
@@ -400,22 +378,16 @@
       });
     }
 
-    /***************************
-     * SEARCH
-     ***************************/
-    el('#searchInput').addEventListener('input', (e)=>{
+    // Search
+    N('#searchInput').addEventListener('input', (e)=>{
       const txt=e.target.value.trim().toLowerCase();
       renderSections(txt);
     });
 
-    /***************************
-     * MODAL (Track focus)
-     ***************************/
-    const modal = el('#modal');
-    const modalCover = el('#modalCover'); const modalTitle = el('#modalTitle'); const modalSub = el('#modalSub');
-    const modalTracklist = el('#modalTracklist');
-    const closeModal = el('#closeModal');
-    const modalPlay = el('#modalPlay'); const modalAddQueue = el('#modalAddQueue'); const modalAddPlaylist = el('#modalAddPlaylist');
+    // Modal
+    const modal = N('#modal'), modalCover = N('#modalCover'), modalTitle = N('#modalTitle'), modalSub = N('#modalSub');
+    const modalTracklist = N('#modalTracklist'), closeModal = N('#closeModal');
+    const modalPlay = N('#modalPlay'), modalAddQueue = N('#modalAddQueue'), modalAddPlaylist = N('#modalAddPlaylist');
     let modalTrack = null;
 
     function openModal(t){
@@ -424,7 +396,7 @@
       const albumMates = tracks.filter(x=>x.album===t.album);
       albumMates.forEach((m,idx)=>{
         const r=document.createElement('div'); r.className='row';
-        r.innerHTML=`<div class="num">${idx+1}</div><div>${m.title}${m.id===t.id? ' • <span style=\"color:#1db954\">selected</span>':''}${m.explicit?'<span class="explicit" style="margin-left:.4rem">E</span>':''}</div><div style="color:#bdbdbd">${m.artist}</div><div style="text-align:right">${fmtTime(m.duration||0)}</div>`;
+        r.innerHTML=`<div class="num">${idx+1}</div><div>${m.title}${m.id===t.id? ' • <span style="color:#1db954">selected</span>':''}${m.explicit?'<span class="explicit" style="margin-left:.4rem">E</span>':''}</div><div style="color:#bdbdbd">${m.artist}</div><div style="text-align:right">${fmtTime(m.duration||0)}</div>`;
         r.addEventListener('dblclick', ()=>{ playTrackById(m.id, true); });
         modalTracklist.appendChild(r);
       });
@@ -436,27 +408,13 @@
     modalAddQueue.onclick = ()=>{ if(modalTrack){ addToQueue(modalTrack.id); }};
     modalAddPlaylist.onclick = ()=>{ if(modalTrack){ choosePlaylistAndAdd(modalTrack.id); }};
 
-    /***************************
-     * PLAYER + QUEUE
-     ***************************/
-    const audio = el('#audio');
-    const nowCover=el('#nowCover'), nowTitle=el('#nowTitle'), nowArtist=el('#nowArtist');
-    const btnPlay=el('#btnPlay'), btnPrev=el('#btnPrev'), btnNext=el('#btnNext');
-    const btnShuffle=el('#btnShuffle'), btnRepeat=el('#btnRepeat');
-    const seek=el('#seek'), vol=el('#volume');
-    const curTime=el('#curTime'), durTime=el('#durTime');
-    const queueCount = el('#queueCount');
-
+    // Player + Queue
     vol.addEventListener('input', ()=> audio.volume = +vol.value);
-
-    btnPlay.onclick = ()=>{ if(audio.paused){ audio.play(); btnPlay.textContent='⏸'; } else { audio.pause(); btnPlay.textContent='▶'; } };
+    btnPlay.onclick = ()=>{ if(audio.paused){ audio.play().catch(e=>showNotice('Audio play blocked; click again.')); btnPlay.textContent='⏸'; } else { audio.pause(); btnPlay.textContent='▶'; } };
     btnPrev.onclick = ()=> prevInQueue();
     btnNext.onclick = ()=> nextInQueue(true);
     btnShuffle.onclick = ()=>{ state.shuffle=!state.shuffle; btnShuffle.style.background = state.shuffle?'#2c2c2c':'#1f1f1f'; };
-    btnRepeat.onclick = ()=>{
-      state.repeat = state.repeat==='off'?'all': state.repeat==='all'?'one':'off';
-      btnRepeat.textContent = state.repeat==='off'?'🔁': state.repeat==='all'?'🔂':'🔂1';
-    };
+    btnRepeat.onclick = ()=>{ state.repeat = state.repeat==='off'?'all': state.repeat==='all'?'one':'off'; btnRepeat.textContent = state.repeat==='off'?'🔁': state.repeat==='all'?'🔂':'🔂1'; };
 
     seek.addEventListener('input', ()=>{ if(audio.duration){ const p=seek.value/1000; audio.currentTime = p*audio.duration; }});
     audio.addEventListener('timeupdate', ()=>{
@@ -471,13 +429,10 @@
     function setNow(t){
       nowCover.src=t.cover; nowTitle.textContent=t.title + (t.explicit?' (E)':''); nowArtist.textContent=`${t.artist} • ${t.album}`; btnPlay.textContent='⏸';
     }
-
     function resolveSrc(t){
-      // Use absolute URLs as-is; otherwise prepend STREAM_BASE
-      if(/^https?:\/\//.test(t.file) || /^blob:/.test(t.file)) return t.file;
+      if(/^https?:\/\//.test(t.file) || /^data:/.test(t.file) || /^blob:/.test(t.file)) return t.file;
       return STREAM_BASE + encodeURIComponent(t.file);
     }
-
     function playTrackById(id, bumpToTop=false){
       const t = tracks.find(x=>x.id===id); if(!t) return;
       if(t.explicit && !confirm(`This track is marked explicit. Continue?`)) return;
@@ -487,14 +442,15 @@
       if(bumpToTop){ moveToFront(state.queue, id); }
       state.current = { id, idx: state.queue.indexOf(id) };
       queueCount.textContent = `Queue: ${state.queue.length}`;
-      audio.src = resolveSrc(t); audio.play(); setNow(t);
+      audio.src = resolveSrc(t);
+      audio.play().catch(()=>{/* ignore autoplay errors */});
+      setNow(t);
       saveQueue();
     }
-
     function addToQueue(id){ if(!state.queue.includes(id)){ state.queue.push(id); queueCount.textContent = `Queue: ${state.queue.length}`; saveQueue(); }}
     function moveToFront(arr, id){ const i=arr.indexOf(id); if(i>-1){ arr.splice(i,1); arr.unshift(id); } }
 
-    function nextInQueue(userInitiated){
+    function nextInQueue(){
       if(!state.queue.length){ audio.pause(); btnPlay.textContent='▶'; return; }
       let idx = state.current? state.queue.indexOf(state.current.id): -1;
       if(state.shuffle){
@@ -514,31 +470,24 @@
       let idx = state.current? state.queue.indexOf(state.current.id): 0;
       idx = Math.max(0, idx-1); playTrackById(state.queue[idx], true);
     }
-
     function saveQueue(){ localStorage.setItem('bfmQueue', JSON.stringify({queue:state.queue, current:state.current})); }
     function loadQueue(){ try{ const q=JSON.parse(localStorage.getItem('bfmQueue')||'null'); if(q){ state.queue=q.queue||[]; state.current=q.current||null; queueCount.textContent=`Queue: ${state.queue.length}`; if(state.current){ playTrackById(state.current.id, true); } } }catch(e){} }
 
-    /***************************
-     * LIBRARY + PLAYLISTS
-     ***************************/
+    // Library + Playlists
     function toggleLibrary(id){ if(state.library.has(id)){ state.library.delete(id); } else { state.library.add(id); }
       localStorage.setItem('bfmLibrary', JSON.stringify([...state.library])); updateCounters(); }
-
     function choosePlaylistAndAdd(id){
       let names = Object.keys(state.playlists);
       let choice = prompt(`Add to which playlist?\nExisting: ${names.join(', ') || '(none)'}\nType a name to use/create:`);
       if(!choice) return; choice = choice.trim(); if(!choice) return;
       state.playlists[choice] = state.playlists[choice] || [];
       if(!state.playlists[choice].includes(id)) state.playlists[choice].push(id);
-      localStorage.setItem('bfmPlaylists', JSON.stringify(state.playlists)); updateCounters(); alert(`Added to \"${choice}\"`);
+      localStorage.setItem('bfmPlaylists', JSON.stringify(state.playlists)); updateCounters(); alert(`Added to "${choice}"`);
     }
+    function updateCounters(){ N('#libCount').textContent = state.library.size; N('#plCount').textContent = Object.keys(state.playlists).length; }
 
-    function updateCounters(){ el('#libCount').textContent = state.library.size; el('#plCount').textContent = Object.keys(state.playlists).length; }
-
-    /***************************
-     * LOCAL FILE IMPORT (optional)
-     ***************************/
-    el('#localFiles').addEventListener('change', (e)=>{
+    // Local import
+    N('#localFiles').addEventListener('change', (e)=>{
       const files=[...e.target.files];
       files.forEach((f,i)=>{
         const id = 'local_'+Date.now()+'_'+i;
@@ -548,14 +497,7 @@
       renderSections(); alert(`Imported ${files.length} file(s).`);
     });
 
-    /***************************
-     * UTIL
-     ***************************/
-    function fmtTime(sec){ sec = Math.round(sec); const m=Math.floor(sec/60); const s=(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
-
-    /***************************
-     * DIAGNOSTICS VIEW (Stream tester)
-     ***************************/
+    // Diagnostics
     function renderDiagnostics(){
       sections.innerHTML = '';
       const sec = document.createElement('section');
@@ -605,25 +547,19 @@
         out.textContent = 'Running tests…';
         const url = resolve();
 
-        // --- Environment prechecks ---
         if (location.protocol === 'https:' && url.startsWith('http:')) {
-          err('Mixed content: this page is HTTPS but the stream is HTTP. The browser will block it.');
-          log('Fix: serve the stream over HTTPS, or host this page on HTTP/same-origin so the schemes match.');
+          err('Mixed content: HTTPS page but HTTP stream. Use HTTPS stream or same-origin HTTP.');
           return;
         }
         if (location.protocol === 'file:') {
-          log('You are running from file://. Many browsers restrict fetch/audio from file origins.');
-          log('Fix: serve this HTML via a local server (e.g., `npx serve` or `python3 -m http.server`) and open http://localhost:PORT.');
+          log('You opened via file://. Use a local server (see server.js below).');
         }
 
         try{
-          // Quick reachability HEAD (some servers may not allow HEAD; ignore failures here)
           try {
             const head = await fetch(url, { method:'HEAD', cache:'no-store' });
             log(`HEAD → status ${head.status}`);
-          } catch (e) {
-            log('HEAD request failed (not fatal)');
-          }
+          } catch { log('HEAD request failed (not fatal)'); }
 
           const t0 = performance.now();
           const r = await fetch(url, { method:'GET', headers:{ 'Range':'bytes=0-1' }, cache:'no-store' });
@@ -637,7 +573,7 @@
           log(`Accept-Ranges: ${ar || '(none)'}`);
           log(`Content-Range: ${cr || '(none)'}`);
           if(r.status===206){ ok('Partial content supported (byte-range). Seeking should work.'); }
-          else if(r.status===200){ log('ℹ️ Server returned 200. May still play, but seeking may be limited.'); }
+          else if(r.status===200){ log('ℹ️ 200 OK (may play, but seeking may be limited).'); }
           else { err('Unexpected status code.'); }
 
           const t2 = performance.now();
@@ -646,45 +582,31 @@
           ok(`Fetched 64KB chunk in ${(t3 - t2).toFixed(1)} ms (status ${r2.status}).`);
 
           a.src = url;
-          a.onloadedmetadata = ()=>{
-            const target = Math.min(10, (a.duration||60)/2);
-            a.currentTime = target; // trigger seek
-          };
-          a.onseeking = ()=>{ log('🔎 audio: seeking…'); };
-          a.onseeked  = ()=>{ ok('audio: seeked successfully'); };
-          a.onerror   = ()=>{ err('audio error: '+ (a.error?.message||a.error?.code||'unknown')); };
+          a.onloadedmetadata = ()=>{ const target = Math.min(10, (a.duration||60)/2); a.currentTime = target; };
+          a.onseeking = ()=> log('🔎 audio: seeking…');
+          a.onseeked  = ()=> ok('audio: seeked successfully');
+          a.onerror   = ()=> err('audio error: '+ (a.error?.message||a.error?.code||'unknown'));
 
         }catch(e){
-          // Common causes: CORS, DNS/port blocked, self-signed TLS from upgrade, wrong path
-          err('Fetch failed.');
-          log('Possible causes:');
-          log(' • CORS: Add Access-Control-Allow-Origin:* on the stream responses (or use same-origin).');
-          log(' • Mixed content: HTTPS page → HTTP stream (use HTTPS or same-origin).');
-          log(' • Firewall/NAT: Port closed or not reachable from this device.');
-          log(' • Wrong URL/path: Open the URL directly in a new tab to confirm.');
+          err('Fetch failed — likely CORS, mixed-content, firewall/NAT, or wrong URL.');
           log('Raw error: '+ e.message);
         }
       };
-          a.onseeking = ()=>{ log('🔎 audio: seeking…'); };
-          a.onseeked  = ()=>{ ok('audio: seeked successfully'); };
-          a.onerror   = ()=>{ err('audio error: '+ (a.error?.message||a.error?.code||'unknown')); };
-
-        }catch(e){ err('Fetch failed — likely CORS, HTTPS upgrade, firewall, or wrong URL. '+e.message); }
-      };
     }
 
-    /***************************
-     * INIT
-     ***************************/
+    // Utils
+    function fmtTime(sec){ sec = Math.round(sec); const m=Math.floor(sec/60); const s=(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
+
+    // Init
     buildHero(); showHero(0); startHero();
     renderSections(); updateCounters(); loadQueue();
 
-    // Keyboard shortcuts
+    // Keyboard
     window.addEventListener('keydown', (e)=>{
       if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
       if(e.code==='Space'){ e.preventDefault(); btnPlay.click(); }
       if(e.code==='ArrowRight'){ audio.currentTime = Math.min((audio.currentTime||0)+5, audio.duration||Infinity); }
-      if(e.code==='ArrowLeft'){ audio.currentTime = Math.max((audio.currentTime||0)-5, 0); }
+      if(e.code==='ArrowLeft'){  audio.currentTime = Math.max((audio.currentTime||0)-5, 0); }
     });
 
     // Nav
@@ -692,7 +614,7 @@
       item.addEventListener('click', ()=>{
         document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); item.classList.add('active');
         const v=item.dataset.view;
-        if(v==='featured'){ document.getElementById('searchInput').value=''; renderSections(''); window.scrollTo({top:0, behavior:'smooth'}); }
+        if(v==='featured'){ N('#searchInput').value=''; renderSections(''); window.scrollTo({top:0, behavior:'smooth'}); }
         if(v==='library'){
           const set=new Set(state.library); const list=tracks.filter(t=>set.has(t.id));
           sections.innerHTML=''; const sec=document.createElement('section'); sec.className='section'; sec.innerHTML='<h2>Your Library</h2>';
@@ -714,11 +636,13 @@
         if(v==='home'){ renderSections(); }
       });
     });
+  });
   </script>
 
   <br>
   <p style="text-align:center; color:#c9c9c9; font-size:.9rem; max-width:900px; margin: 0 auto 120px; line-height:1.5">
-    ⚠️ Use only music you have the rights to stream. Ensure your server hosts files you own or that are licensed for personal streaming. For information on copyright, visit <a href="https://www.copyright.gov" target="_blank" style="color:#8ab4f8">copyright.gov</a>.
+    ⚠️ Stream only music you have rights to. For info on copyright, visit
+    <a href="https://www.copyright.gov" target="_blank" style="color:#8ab4f8">copyright.gov</a>.
   </p>
 </body>
 </html>
